@@ -1,4 +1,5 @@
 import random
+import os
 from psychopy import visual, core, event
 
 def initialize_experiment(config, ARM_POSITIONS):
@@ -98,13 +99,15 @@ def determine_reward(probs, choice):
     return random.random() < probs[choice]
 
 def prepare_feedback(reward, coin_opacity, FEEDBACK_POS, win):
+    base_path = os.path.join(os.path.dirname(__file__), '..', 'stimuli')
     if reward:
-        image_path = 'stimuli/rewards/coin_reward.png'
+        image_path = os.path.join(base_path, 'rewards', 'coin_reward.png')
     else:
-        image_path = 'stimuli/rewards/coin_no_reward.png'
+        image_path = os.path.join(base_path, 'rewards', 'coin_no_reward.png')
     
     feedback = visual.ImageStim(win, image=image_path, pos=FEEDBACK_POS, opacity=coin_opacity)
-    mask = visual.ImageStim(win, image='stimuli/masks/mask.png', pos=FEEDBACK_POS)
+    mask_path = os.path.join(base_path, 'masks', 'mask.png')
+    mask = visual.ImageStim(win, image=mask_path, pos=FEEDBACK_POS)
     return feedback, mask
 
 def show_feedback_sequence(win, arms, feedback, mask, MASK_DURATION, REWARD_DURATION, BLANK_DURATION, MASK_SHORT_DURATION):

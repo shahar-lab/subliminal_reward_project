@@ -1,0 +1,9 @@
+{
+    "response_options": [
+        "0 - I saw Nothing",
+        "1 - I had a vague glimpse, I don't know what it was",
+        "2 - I saw the coin almost clearly",
+        "3 - I saw the coin clearly"
+    ],
+    "coin_probability": 0.5
+}

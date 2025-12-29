@@ -1,11 +1,13 @@
 import random
 import csv
 import json
+import os
 from psychopy import visual, core, event
 from task_logic import run_experiment
 
 def load_config():
-    with open('config.json') as f:
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
+    with open(config_path) as f:
         config = json.load(f)
     return config
 
@@ -17,8 +19,8 @@ def setup_window(config):
     win = visual.Window(size=(WINDOW_WIDTH, WINDOW_HEIGHT), color=WINDOW_COLOR, units=UNITS)
     return win
 
-def setup_stimuli(win):
-    ARM_POSITIONS = [(-300, 0), (-100, 0), (100, 0), (300, 0)]
+def setup_stimuli(win, config):
+    ARM_POSITIONS = [tuple(pos) for pos in config['arm_positions']]
     ARM_WIDTH = 100
     ARM_HEIGHT = 100
     ARM_COLOR = 'darkgray'
@@ -37,7 +39,8 @@ def setup_stimuli(win):
     return arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS
 
 def save_data(data):
-    with open('results.csv', 'w', newline='') as f:
+    results_path = os.path.join(os.path.dirname(__file__), '..', 'results.csv')
+    with open(results_path, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['round', 'choice', 'reward', 'probs'])
         writer.writeheader()
         for row in data:
@@ -50,7 +53,7 @@ def cleanup(win):
 def main():
     config = load_config()
     win = setup_window(config)
-    arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS = setup_stimuli(win)
+    arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS = setup_stimuli(win, config)
     data = run_experiment(win, arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS, config)
     save_data(data)
     cleanup(win)
