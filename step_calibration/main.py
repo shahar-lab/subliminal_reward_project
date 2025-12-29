@@ -45,23 +45,61 @@ def setup_stimuli(win, config):
     return arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS
 
 def save_data(data, filename):
-    results_path = os.path.join(os.path.dirname(__file__), '..', filename)
+    results_path = os.path.join(os.path.dirname(__file__), filename)
     with open(results_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['trial', 'opacity', 'response', 'seen', 'coin_type'])
+        writer = csv.DictWriter(f, fieldnames=['block', 'trial', 'opacity', 'response', 'seen', 'coin_type', 'chosen_coin', 'correct', 'step'])
         writer.writeheader()
         for row in data:
-            writer.writerow(row)
+            cleaned_row = {k: v if v is not None else '' for k, v in row.items()}
+            writer.writerow(cleaned_row)
 
-def cleanup(win):
-    win.close()
+def show_message(win, message, wait_for_key=True):
+    text = visual.TextStim(win, text=message, height=30, pos=(0, 0))
+    text.draw()
+    win.flip()
+    if wait_for_key:
+        event.waitKeys(keyList=['space', 'escape'])
+        if 'escape' in event.getKeys():
+            core.quit()
 
 if __name__ == "__main__":
     config = load_config()
     calibration_config = load_calibration_config()
+    num_blocks = calibration_config.get('num_blocks', 1)
     win = setup_window(config)
     arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS = setup_stimuli(win, config)
     
-    data = run_calibration(win, arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS, config, calibration_config)
+    all_data = []
+    final_opacities = []
+    for block in range(1, num_blocks + 1):
+        show_message(win, f"Block {block} out of {num_blocks}\nReady to start? (Press space)", wait_for_key=True)
+        print(f"Starting block {block}")
+        data = run_calibration(win, arms, gray_circles, colored_circles, ARM_POSITIONS, CIRCLE_ACTIVE_COLORS, config, calibration_config)
+        for row in data:
+            row['block'] = block
+        all_data.extend(data)
+        # Find final opacity
+        for row in reversed(data):
+            if row['trial'] == 'final':
+                final_opacities.append(row['opacity'])
+                break
+        if 1 < block:
+            show_message(win, "Good job!", wait_for_key=True)
     
-    save_data(data, 'calibration_results.csv')
+    # Calculate overall final
+    if final_opacities:
+        overall_final = sum(final_opacities) / len(final_opacities)
+        all_data.append({
+            'block': 'overall',
+            'trial': 'final',
+            'opacity': overall_final,
+            'response': '',
+            'seen': '',
+            'coin_type': '',
+            'chosen_coin': '',
+            'correct': '',
+            'step': ''
+        })
+    
+    save_data(all_data, 'calibration_results.csv')
     cleanup(win)

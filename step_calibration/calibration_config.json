@@ -5,5 +5,12 @@
         "2 - I saw the coin almost clearly",
         "3 - I saw the coin clearly"
     ],
-    "coin_probability": 0.5
+    "coin_probability": 0.5,
+    "initial_step": 0.2,
+    "step_decrease": 0.05,
+    "min_step": 0.05,
+    "min_opacity": 0.1,
+    "max_opacity": 1.0,
+    "cwir_stop": 50,
+    "num_blocks": 2
 }
