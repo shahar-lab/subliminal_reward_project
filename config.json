@@ -1,7 +1,7 @@
 {
     "initial_prob": 0.5,
     "step_size": 0.05,
-    "coin_opacity": 0.5,
+    "coin_opacity": 1,
     "time_limit": 6.0,
     "n_rounds": 50,
     "arm_positions": [[-300, 0], [-100, 0], [100, 0], [300, 0]]

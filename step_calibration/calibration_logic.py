@@ -33,7 +33,7 @@ def prepare_coin(win, opacity, FEEDBACK_POS, coin_probability):
     else:
         image_path = os.path.join(base_path, 'rewards', 'coin_no_reward.png')  # black
         coin_type = 'black'
-    coin = visual.ImageStim(win, image=image_path, pos=FEEDBACK_POS, opacity=opacity)
+    coin = visual.ImageStim(win, image=image_path, pos=FEEDBACK_POS, opacity=opacity, size=(80, 80))
     return coin, coin_type
 
 def prepare_mask(win, FEEDBACK_POS):
@@ -94,9 +94,9 @@ def get_response(win, TEXT_HEIGHT, response_options):
 
 def discrimination_task(win, TEXT_HEIGHT, coin_type):
     base_path = os.path.join(os.path.dirname(__file__), '..', 'stimuli', 'rewards')
-    gold_coin = visual.ImageStim(win, image=os.path.join(base_path, 'coin_reward.png'), pos=(-100, 200))
-    black_coin = visual.ImageStim(win, image=os.path.join(base_path, 'coin_no_reward.png'), pos=(100, 200))
-    
+    gold_coin = visual.ImageStim(win, image=os.path.join(base_path, 'coin_reward.png'), pos=(-100, 200), size=(80, 80))
+    black_coin = visual.ImageStim(win, image=os.path.join(base_path, 'coin_no_reward.png'), pos=(100, 200), size=(80, 80))
+
     question = visual.TextStim(win, text="What did you most likely see?\nLeft Arrow: Gold Coin    Right Arrow: Black Coin\nPress Left or Right Arrow", height=TEXT_HEIGHT, pos=(0, 0))
     question.draw()
     gold_coin.draw()

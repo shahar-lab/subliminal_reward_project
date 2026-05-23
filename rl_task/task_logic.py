@@ -37,7 +37,7 @@ def initialize_experiment(config, ARM_POSITIONS, win):
     WAIT_INITIAL = 1.0          # Empty squares before circles appear
     WAIT_POST_CHOICE = 1.0      # Empty squares after choice, before mask
     MASK_DURATION_LONG = 1.0    # First mask
-    REWARD_DURATION = 0.033     # Reward/No-reward presentation
+    REWARD_DURATION = 3 # 0.033     # Reward/No-reward presentation
     MASK_DURATION_SHORT = 0.033 # Second mask
     INVALID_MSG_DURATION = 1.0
     SMALL_WAIT = 0.01
