@@ -1,0 +1,16 @@
+python                          3.11.17
+platform                        Windows-10-10.0.26200-SP0
+psychopy                        2026.2.4
+screen 0 resolution (pix)       1536 x 960
+windows display scaling (%)     125  (should be 100 on the experiment PC)
+psychtoolbox (precise keys)     available
+import psychopy.visual took (s) 1.1
+window size (pix)               1536 x 960
+measured refresh rate (Hz)      60.033
+frame duration (ms)             16.657
+  16.7 ms = frames              1.00
+  33.3 ms = frames              2.00
+  50.0 ms = frames              3.00
+windowWinType                   pyglet
+screen width (cm)               MEASURE WITH A RULER (visible image only)
+viewing distance (cm)           MEASURE (eye to screen)

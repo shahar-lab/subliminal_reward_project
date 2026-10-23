@@ -1,1 +1,4 @@
+# Developed and tested with PsychoPy 2024.2.4 on Python 3.10.
+# Pin the exact version installed on the lab PC once known (see print_machine_info.py).
 psychopy
+pytest

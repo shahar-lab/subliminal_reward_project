@@ -1,59 +1,115 @@
-# 4-Armed Bandit Task Experiment
+# Subliminal reward learning – PsychoPy experiment
 
-This is a PsychoPy-based experiment implementing a 4-armed bandit task where participants choose between four colored squares (arms) to maximize rewards. The reward probabilities for each arm change each round in a random walk manner.
+Two-day lab experiment (Shahar lab, TAU). Does reward-driven learning happen when the reward is
+presented below awareness?
 
-## Features
+| Day | Script | Tasks, in order |
+|---|---|---|
+| 1 | `python run_day_1.py` | Working memory (change detection) → casino game, conscious coin → questionnaires |
+| 2 | `python run_day_2.py` | STEP calibration of the coin opacity → casino game at the calibrated opacity → questionnaires |
 
-- 4 arms represented as colored squares: red, blue, green, yellow (2 active per round, 2 inactive shown as gray)
-- Reward probabilities start at a constant value and change via random walk each round
-- Mouse-based interaction for selecting arms
-- Feedback display after each choice
-- Data logging of choices, rewards, and current probabilities
+Each script opens a dialog (subject ID, experimenter; on Day 1 also age, gender, hand) and runs all tasks.
 
-## Configuration
+**Changing the code?** Read `DEVELOPMENT.md` first: design principles, where to change what, known gotchas,
+the decision log, and a changelog to update.
 
-Edit `config.json` to set:
-- `initial_prob`: Starting reward probability for each arm (e.g., 0.5)
-- `step_size`: Standard deviation of the random walk step (e.g., 0.05)
+## Setup (once per computer)
 
-## Requirements
-
-- Python 3.x
-- PsychoPy library
-
-## Installation
-
-1. Install Python if not already installed.
-2. Install the required dependencies:
+1. **Keep the Python environment outside OneDrive** (OneDrive syncing makes PsychoPy imports take minutes).
+   On the experiment PC, keep this repository outside OneDrive too.
    ```
+   py -3.11 -m venv C:\envs\psychopy-env
+   C:\envs\psychopy-env\Scripts\activate
    pip install -r requirements.txt
    ```
+2. **Windows display scaling must be 100%** (Settings → Display → Scale). The experiment warns at start if not.
+3. Run `python print_machine_info.py` and copy its values into the `Monitor / window` block of `config.py`
+   (resolution, refresh rate). Measure the screen width and the viewing distance in cm.
+4. Check everything: `python -m pytest tests` (all tests must pass) and one bot run of each day (below).
 
-## Running the Experiment
+## Before collecting real data
 
-Run the experiment using:
+- `config.py`: `FEEDBACK_COIN_DURATION` is **3.0 s for debugging** – restore it to `0.033`.
+- `config.py`: replace every value marked `PLACEHOLDER` with the experiment PC's values.
+- Open decisions that are config switches are listed in the status report (e.g. `REWARD_WALK`,
+  `AWARENESS_PROBE_RATE`, `SHOW_TOTAL_DAY`, `WM_BALANCED_CONDITIONS`).
+
+## Lab PC checklist (display and timing)
+
+The coin must be shown for exactly 33 ms in calibration and task alike. On a 60 Hz screen that is
+2 refreshes; a missed refresh makes it 50 ms. Check before the first participant:
+
+1. One monitor, native resolution, **Windows scaling 100%**. Turn off adaptive sync (G-Sync/FreeSync),
+   HDR, Night light, eye-care / dynamic-contrast modes.
+2. Refresh rate **60 or 120 Hz** (33.3 ms = 2 or 4 refreshes). Not 144 Hz (4.75 refreshes).
+3. Code and Python environment outside OneDrive; pause sync, notifications and updates; close other programs.
+4. Same PC and monitor for both days (opacity looks different on different screens).
+5. `python print_machine_info.py` → copy resolution and refresh rate into `config.py`; measure screen width
+   and viewing distance (cm), use a chin rest.
+6. Restore `FEEDBACK_COIN_DURATION = 0.033` (debug value is 3 s).
+7. `python demo_scene.py` (full screen) → `demo_timing.txt`: coin and backward mask should read ~33.3 ms on
+   every trial. 50 ms values = dropped refreshes; odd in-between values = timestamps not locked to the
+   refresh (seen on the development laptop: 34.8–36.5 ms).
+8. If available, verify the 33 ms coin with a photodiode.
+9. `python run_day_1.py --bot-real` once, to check session length and smoothness.
+10. After the pilot: check `coin_duration_measured` in the bandit and calibration files.
+
+## Running a session
+
+- Keyboard layout: the task keys (s/f/h/k, numbers, arrows, space) also work on the Hebrew layout.
+  The participant needs the Hebrew layout (Alt+Shift) only for the two typed questions at the end.
+- **Escape** stops the day at any point; everything collected so far is saved.
+- **Day 2 calibration stop:** if a calibration block reaches 300 trials without converging, the participant
+  sees "please call the experimenter", the console explains why, and the casino game does not start.
+- **Crash or stop on Day 2:** run Day 2 again from the start. The casino game only uses the calibration
+  value from the same run; it never reads an older file.
+- Payment: the end of the casino game shows the coins collected and the amount (also printed in the console
+  and saved in the data).
+
+## Data
+
 ```
-python main.py
+data/
+  calibration_summary.csv                         one row per calibration run (all participants)
+  sub-007/
+    sub-007_day1_<date>.log                       PsychoPy log of the whole day
+    sub-007_day1_<date>_config.py                 the config.py used
+    sub-007_day1_wm_<date>.csv / .psydat          one file per task (PsychoPy ExperimentHandler)
+    sub-007_day1_bandit_<date>.csv / .psydat
+    sub-007_day1_questionnaires_<date>.csv / .psydat
+    sub-007_day2_calibration_<date>.csv / ...
 ```
+Nothing is ever overwritten (every name carries a date-time stamp). `data/` is not committed to git.
+Main columns: see the docstring at the top of each task file in `tasks/`. Columns starting with `t_` are
+flip times – the moment a screen appeared, in seconds – so differences give real on-screen durations.
 
-The experiment will run for 50 rounds. In each round:
-1. Four gray squares appear with 2 colored circles on top (active arms).
-2. Click on an active colored circle to choose an arm.
-3. Receive feedback on whether you got a reward.
-4. Probabilities update via random walk.
-5. Circles reappear for the next round.
+## Checking without a participant
 
-## Output
+```
+python run_day_1.py --bot        simulated participant, short durations (~1 minute)
+python run_day_1.py --bot-real   simulated participant, real durations
+python demo_scene.py --window    the casino screen and coin sequence + measured timing
+```
+Bot data go to `data/bot/` with subject ID 999.
 
-Results are saved to `results.csv` with columns:
-- round: The round number
-- choice: The index of the chosen arm (0-3)
-- reward: 1 if reward received, 0 otherwise
-- probs: The current reward probabilities for all arms as a list
+## Code layout
 
-## Customization
-
-You can modify parameters in `main.py`:
-- `n_rounds`: Number of rounds (default: 50)
-
-Or edit `config.json` for probabilities.
+```
+config.py              every tunable value, with comments
+run_day_1.py, run_day_2.py
+common/                shared building blocks
+  display.py           window, monitor profile, flip timestamps
+  scene.py             THE casino screen and the mask–coin–mask sequence (used by bandit and calibration)
+  awareness.py         PAS and gold/black choice screens
+  ui.py                Hebrew text pages, instructions, quiz, Likert, typed answers
+  keyboard.py, io.py   keys / abort, participant dialog and PsychoPy data saving
+  day.py, bot.py       day runner, bot mode
+tasks/
+  calibration/         STEP staircase (step.py, pure logic) + task
+  bandit/              schedule (seeded) + casino game
+  wm/                  change-detection task (port of shahar-lab/working_memory_capacity_change_detection_task)
+  questionnaires/      open questions + IMI
+texts/                 all participant-facing Hebrew text
+tests/                 python -m pytest tests
+legacy/                the original prototype scripts (not used)
+```
