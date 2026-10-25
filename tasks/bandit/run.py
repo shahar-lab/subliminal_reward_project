@@ -84,11 +84,10 @@ def run(ctx, day):
             if t % config.BANDIT_TRIALS_PER_BLOCK == 0 and block < config.BANDIT_N_BLOCKS:
                 ctx.screens.break_screen(T.BREAK.format(done=block, total=config.BANDIT_N_BLOCKS))
 
-        shekel = round(coins * config.COIN_VALUE_SHEKEL, 2)
-        td.add_row({'phase': 'main', 'event': 'bandit_total', 'coins_total': coins, 'payment_shekel': shekel})
-    print(f'Bandit day {day}: {coins} gold coins = {shekel:.2f} NIS')
+        td.add_row({'phase': 'main', 'event': 'bandit_total', 'coins_total': coins})
+    print(f'Bandit day {day}: {coins} gold coins')
     if config.SHOW_TOTAL_DAY.get(day, True):
-        ctx.screens.message(T.END_WITH_TOTAL.format(coins=coins, shekel=shekel))
+        ctx.screens.message(T.END_WITH_TOTAL.format(coins=coins))
     else:
         ctx.screens.message(T.END_NO_TOTAL)
     return coins

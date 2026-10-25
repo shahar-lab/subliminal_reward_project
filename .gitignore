@@ -1,0 +1,17 @@
+# Participant data - never commit
+data/
+
+# Generated diagnostics / per-computer cache
+display_cache.json
+demo_timing.txt
+
+# Python environments (keep them OUTSIDE OneDrive, see README)
+psychopy-env/
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/

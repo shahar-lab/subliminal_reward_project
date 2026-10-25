@@ -1,9 +1,9 @@
 """STEP calibration task (Day 2) - shown in the casino scene, exactly like the bandit's feedback.
 
-Flow: instructions -> quiz (repeat until all correct) -> practice -> block 1 -> break -> block 2.
+Flow: instructions -> quiz (repeat until all correct) -> block 1 -> break -> block 2 (no practice trials).
 Trial: empty arms (WAIT_POST_CHOICE) -> scene.feedback_sequence(coin, opacity) -> PAS -> coin choice.
 
-Saved (PsychoPy ExperimentHandler, one CSV): quiz answers, every practice and staircase trial,
+Saved (PsychoPy ExperimentHandler, one CSV): quiz answers, every staircase trial,
 one 'block_threshold' row per block and one 'final_threshold' row. A row is also added to
 data/calibration_summary.csv. If a block reaches CALIB_MAX_TRIALS without converging, the
 calibration stops, the participant is asked to call the experimenter, and the day ends.
@@ -41,13 +41,7 @@ def run(ctx):
     with TaskData(ctx.participant, CALIBRATION_TASK, extra) as td:
         ctx.screens.instructions_with_quiz(build_pages(scene, awareness.gold_side), T.QUIZ, log=td.add_row)
 
-        ctx.screens.message(T.PRACTICE_START)
-        practice = list(config.CALIB_PRACTICE_OPACITIES)
-        random.shuffle(practice)
-        for i, opacity in enumerate(practice, start=1):
-            row = run_trial(ctx, scene, awareness, opacity)
-            td.add_row({'phase': 'practice', 'trial': i, **row})
-        ctx.screens.message(T.PRACTICE_END)
+        ctx.screens.message(T.CALIBRATION_START)
 
         block_thresholds, block_trials, status = [], [], 'completed'
         for block in range(1, config.CALIB_N_BLOCKS + 1):

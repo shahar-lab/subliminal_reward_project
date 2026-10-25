@@ -40,6 +40,7 @@ User-facing instructions (setup, running a session, data files) are in `README.m
 |---|---|
 | change a duration, size, trial count, key, colour | `config.py` |
 | change a sentence the participant sees | `texts/<task>.py` |
+| try the task yourself, short | `python run_day_1.py --manual-demo` (trial counts: `BOT_SHORT` in `common/bot.py`) |
 | add/remove a quiz question | `QUIZ` list in `texts/<task>.py` (`correct` = 0-based index); bot mode answers automatically |
 | change instruction pages | `PAGES` in `texts/<task>.py`; picture keys (`offer`, `coins`, `mask`, …) are drawn by `build_pages()` in the task |
 | change task order or add a task | the `TASKS` list in `run_day_1.py` / `run_day_2.py` |
@@ -68,6 +69,9 @@ After any change: `python -m pytest tests` and `python run_day_1.py --bot` / `ru
   `ARM_KEY_ALIASES` / `WM_KEY_ALIASES`.
 - **Measured timing on the laptop (60 Hz):** the 33 ms backward mask measured 34.8–36.5 ms with
   `core.wait()` timing (demo_timing.txt, 23 Oct 2026) - evidence for the timing decision.
+- **Refresh-rate measurement** (~10–20 s) runs only once per computer + screen setup; the result is cached in
+  `display_cache.json` (keyed by Windows MachineGuid, screen size, full-screen/window and the refresh rate
+  Windows reports, so a new monitor or setting triggers a new measurement). `--remeasure` forces it.
 - **Testing headless:** the code was developed and tested with PsychoPy 2024.2.4 and 2026.2.4 under a
   virtual display (xvfb). Real timing can only be checked on the real screen (`demo_scene.py`, photodiode).
 
@@ -94,17 +98,19 @@ Decided by Alon during code finalization, 22–23 Oct 2026:
   the casino game does not run.
 - Trial = "feedback only": empty arms → the bandit's own mask–coin–mask sequence → PAS (0–3) → gold/black
   2AFC (arrows; gold side by subject-ID parity). No arm choice in calibration. No UI taken from Eden's code.
-- 10 practice trials, 6-question quiz (wording still to be reviewed), break between the 2 blocks.
+- No practice trials (removed 24 Oct 2026: the quiz is enough); 6-question quiz (wording still to be
+  reviewed), break between the 2 blocks.
 - Threshold saved in the calibration CSV + `calibration_summary.csv`. Day-2 bandit uses ONLY the value from
   the calibration run in the same session (never an older file, never another ID).
 
 **Bandit** (`tasks/bandit/`)
-- 4 practice trials (Day 1 full opacity, Day 2 calibrated), 4 blocks × 50, breaks, coins + payment at the end.
+- 4 practice trials (Day 1 full opacity, Day 2 calibrated), 4 blocks × 50, breaks, coins collected shown at the end. No monetary bonus (no money mentioned anywhere).
 - Miss (6 s) → "לא נבחר מיקום בזמן", counts as a trial. Grey-arm key → "בחירה לא זמינה!" for 3 s penalty,
-  trial ends with no outcome, counts as a trial.
+  trial ends with no outcome, counts as a trial. Both messages appear between the reward box and the arms
+  (`MESSAGE_POS`).
 - One random seed per session (saved) generates offers, colours, reward walk and outcomes.
 - Logged per trial includes `reward_oneback` and `pas` / `twoafc_*` (empty unless probed).
-- 9-question quiz (5 from the design + colour, changing odds, time limit, payment).
+- 8-question quiz (5 from the design + colour, changing odds, time limit).
 
 **Working memory** (`tasks/wm/`)
 - Ground truth: github.com/shahar-lab/working_memory_capacity_change_detection_task (not ioc-wm).
@@ -130,3 +136,9 @@ Add a line for every behaviour change (date – what – why).
 
 - 2026-10-23 – Rewrite of the prototype into the current structure (phases 0–7 of the code-finalization
   plan: shared infrastructure, STEP, bandit, WM, questionnaires, day runners, bot mode, README).
+- 2026-10-24 – Bot mode: real durations with few trials (`BOT_SHORT`), shows the real Likert screen.
+- 2026-10-24 – 'בחירה לא זמינה!' / 'too late' messages moved between the reward box and the arms.
+- 2026-10-24 – Refresh rate measured once per computer/screen setup and cached (`display_cache.json`).
+- 2026-10-24 – Calibration practice trials removed.
+- 2026-10-24 – `--manual-demo`: the short bot session played by a human (data in `data/demo/`).
+- 2026-10-24 – No monetary bonus: money removed from the casino instructions, quiz (payment question deleted), end screen and data (`payment_shekel`, `COIN_VALUE_SHEKEL`); colour sentence shortened.

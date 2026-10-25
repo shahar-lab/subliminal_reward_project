@@ -81,6 +81,8 @@ N_ACTIVE_ARMS = 2
 FEEDBACK_POS = (0.0, 5.3)          # the box the coin / masks appear in
 FEEDBACK_BOX_SIZE = (2.6, 2.6)
 FEEDBACK_BOX_COLOR = 'darkgray'
+# 'בחירה לא זמינה!' / 'too late' messages: centred between the reward box and the arms
+MESSAGE_POS = (0.0, ((FEEDBACK_POS[1] - FEEDBACK_BOX_SIZE[1] / 2) + (ARM_Y + ARM_SIZE[1] / 2)) / 2)
 COIN_SIZE = (2.1, 2.1)
 MASK_SIZE = (2.1, 2.1)
 
@@ -130,7 +132,6 @@ CALIB_CWIR_STOP = 50
 CALIB_MIN_TRIALS = 50            # per block
 CALIB_MAX_TRIALS = 300           # per block; reaching it stops the day (experimenter is called)
 CALIB_GOLD_PROBABILITY = 0.5     # chance that the shown coin is gold
-CALIB_PRACTICE_OPACITIES = [1.0, 0.9, 0.8, 1.0, 0.7, 0.6, 0.9, 0.5, 0.4, 0.3]   # shuffled per participant
 CALIB_SUMMARY_FILE = 'calibration_summary.csv'   # in DATA_DIR, one row per calibration run
 INSTR_SCENE_SHIFT_Y = -6.0       # deg - the casino-scene example on instruction pages is drawn this much lower
 
@@ -151,8 +152,7 @@ BANDIT_WALK_FILES = {1: os.path.join('schedules', 'walk_day1.csv'),
 # Hebrew keyboard layout: the same physical keys can arrive as Hebrew letters
 ARM_KEY_ALIASES = {'ד': 's', 'כ': 'f', 'י': 'h', 'ל': 'k'}
 # Payment
-COIN_VALUE_SHEKEL = 0.05         # per gold coin (5 agorot)
-SHOW_TOTAL_DAY = {1: True, 2: True}   # show coins/payment at the end of the task (open decision for Day 2)
+SHOW_TOTAL_DAY = {1: True, 2: True}   # show the coins collected at the end of the task (open decision for Day 2)
 # In-task awareness probe (open decision): fraction of trials followed by PAS + coin choice
 AWARENESS_PROBE_RATE = {1: 0.0, 2: 0.0}
 

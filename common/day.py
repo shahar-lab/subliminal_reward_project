@@ -2,7 +2,8 @@
 
 Each task is a function task(ctx) where ctx carries win, keys, screens,
 participant and runtime info.
-Add --bot (fast) or --bot-real to the command line for a simulated participant (common/bot.py).
+Add --bot (few trials) or --bot-real (full session) to the command line for a simulated participant,
+or --manual-demo to play the same short session yourself (common/bot.py).
 """
 import sys
 from types import SimpleNamespace
@@ -27,10 +28,13 @@ class StopDay(Exception):
 
 
 def run_day(day, tasks):
-    if '--bot' in sys.argv or '--bot-real' in sys.argv:
+    if '--manual-demo' in sys.argv:
+        from common import bot
+        bot.enable_manual_demo()
+    elif '--bot' in sys.argv or '--bot-real' in sys.argv:
         from common import bot
         bot.enable(fast='--bot' in sys.argv)
-    participant = data_io.get_participant_info(day)   # replaced by a fixed bot ID in bot mode
+    participant = data_io.get_participant_info(day)   # fixed ID 999 in bot / manual-demo mode
     start_day_files(participant)
     win, window_info = open_window()
     keys = Keys()

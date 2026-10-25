@@ -1,7 +1,7 @@
 """Day 1: working memory -> conscious bandit -> questionnaires (about the bandit).
 
 Run:  python run_day_1.py   (a dialog asks for the subject ID)
-Add --bot for a simulated participant (see README).
+Add --bot for a simulated participant, or --manual-demo to play a short session yourself (see README).
 """
 from common.day import run_day
 from tasks.bandit import run as bandit

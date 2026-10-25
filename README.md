@@ -46,6 +46,8 @@ The coin must be shown for exactly 33 ms in calibration and task alike. On a 60 
 4. Same PC and monitor for both days (opacity looks different on different screens).
 5. `python print_machine_info.py` → copy resolution and refresh rate into `config.py`; measure screen width
    and viewing distance (cm), use a chin rest.
+   The experiment measures the refresh rate once per computer and screen setup and caches it in
+   `display_cache.json`; after changing monitor settings run once with `--remeasure` (e.g. `python run_day_1.py --remeasure`).
 6. Restore `FEEDBACK_COIN_DURATION = 0.033` (debug value is 3 s).
 7. `python demo_scene.py` (full screen) → `demo_timing.txt`: coin and backward mask should read ~33.3 ms on
    every trial. 50 ms values = dropped refreshes; odd in-between values = timestamps not locked to the
@@ -63,7 +65,7 @@ The coin must be shown for exactly 33 ms in calibration and task alike. On a 60 
   sees "please call the experimenter", the console explains why, and the casino game does not start.
 - **Crash or stop on Day 2:** run Day 2 again from the start. The casino game only uses the calibration
   value from the same run; it never reads an older file.
-- Payment: the end of the casino game shows the coins collected and the amount (also printed in the console
+- No monetary bonus: the end of the casino game shows the coins collected (also printed in the console
   and saved in the data).
 
 ## Data
@@ -86,11 +88,14 @@ flip times – the moment a screen appeared, in seconds – so differences give 
 ## Checking without a participant
 
 ```
-python run_day_1.py --bot        simulated participant, short durations (~1 minute)
-python run_day_1.py --bot-real   simulated participant, real durations
+python run_day_1.py --bot        simulated participant, real durations, a few trials per task (settings in common/bot.py)
+python run_day_1.py --bot-real   simulated participant, the full session
+python run_day_1.py --manual-demo  YOU play the short --bot session (same few trials, real durations, no dialog)
 python demo_scene.py --window    the casino screen and coin sequence + measured timing
 ```
-Bot data go to `data/bot/` with subject ID 999.
+Bot data go to `data/bot/`, manual-demo data to `data/demo/`, both with subject ID 999.
+All flags work for `run_day_2.py` too. In `--manual-demo` nothing is automatic, so you can try every option:
+wrong quiz answers, a grey arm, waiting out the time limit, Escape, etc.
 
 ## Code layout
 

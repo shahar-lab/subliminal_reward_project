@@ -45,7 +45,7 @@ class CasinoScene:
         self.masks = [visual.ImageStim(win, image=os.path.join(config.STIMULI_DIR, path),
                                        pos=config.FEEDBACK_POS, size=config.MASK_SIZE)
                       for path in config.MASK_IMAGES]
-        self.message = visual.TextStim(win, text='', pos=config.FEEDBACK_POS, height=config.TEXT_HEIGHT,
+        self.message = visual.TextStim(win, text='', pos=config.MESSAGE_POS, height=config.TEXT_HEIGHT,
                                        color='red', font=config.FONT, languageStyle=config.LANGUAGE_STYLE)
 
     # ── offer (which arms are available, and their colours) ──────────────────
