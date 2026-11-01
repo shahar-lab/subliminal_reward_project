@@ -93,7 +93,7 @@ function calibrationTimeline() {
             else { final = C.CALIB_FALLBACK_OPACITY; source = 'fallback'; }
             SESSION.calibration = { threshold: final, status: status, source: source,
                                     block_thresholds: blocks.map(b => b.threshold) };
-            if (capStop) SESSION.stopped = 'calibration_cap';
+            if (capStop) SESSION.stopped = 'calibration_cap';   // main.js shows CALIB_ERROR, completion code
             Object.assign(data, { final_threshold: final, calibration_status: status, threshold_source: source,
                                   block_thresholds: blocks.map(b => (b.threshold === null ? '' : b.threshold.toFixed(4))).join(';') });
             SESSION.jsPsych.data.addProperties({ calibration_threshold: final, calibration_status: status });
@@ -101,5 +101,5 @@ function calibrationTimeline() {
         },
     });
     tl.push({ timeline: [messageScreen(K.END, { task: 'calibration' })], conditional_function: () => !SESSION.stopped });
-    return tl;
+    return guardAfterQuiz(tl);
 }

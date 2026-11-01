@@ -6,11 +6,11 @@
 //   -> practice (WM_N_PRACTICE trials, the first has set size 1; repeated until every
 //      set-size-1 trial is correct) -> WM_N_TRIALS test trials -> K per set size (summary row).
 //   Trial: fixation 1000 -> memory array 200 -> fixation 900 -> test square (s/k, max 6000) -> feedback 500.
-// Same/different keys: random per participant (as ioc-wm; the lab used subject ID).
+// Same/different keys: from the first character of the participant ID (code // 2, as the lab's ID // 2).
 
 function wmTimeline() {
     const C = CONFIG, T = SESSION.T, W = T.wm;
-    const sameKey = C.WM_KEYS[Math.floor(Math.random() * 2)];
+    const sameKey = C.WM_KEYS[Math.floor(SESSION.id_code / 2) % 2];   // independent of the gold-side parity
     const diffKey = C.WM_KEYS.find(k => k !== sameKey);
     const keyValues = { same_key: sameKey, diff_key: diffKey };
     const rng = makeRng(makeSeed(null));
@@ -189,5 +189,5 @@ function wmTimeline() {
     });
     tl.push(messageScreen(W.EXP_END, { task: 'wm' }, 'wm-page'));
     tl.push(callFunction(() => { document.body.classList.remove('wm-background'); }));
-    return tl;
+    return guardAfterQuiz(tl);
 }

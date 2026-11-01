@@ -74,11 +74,26 @@ function callFunction(func) {
     return { type: jsPsychCallFunction, func: func };
 }
 
+// nodes that run only while the session has not been stopped
+function unlessStopped(nodes) {
+    return { timeline: nodes, conditional_function: () => !SESSION.stopped };
+}
+
+// A task timeline [..., quiz loop, rest...]: the rest runs only if the quiz was passed.
+function guardAfterQuiz(tl) {
+    const i = tl.findIndex(n => n && n.isQuizLoop);
+    if (i < 0) return tl;
+    delete tl[i].isQuizLoop;   // jsPsych would pass unknown node properties down to the trials
+    return tl.slice(0, i + 1).concat([unlessStopped(tl.slice(i + 1))]);
+}
+
 // ── instructions + quiz ──────────────────────────────────────────────────────
 // pages: function returning an array of HTML strings (evaluated when the trial starts).
 // quiz: [{name, prompt, options, correct (0-based index)}].
-// All questions on one page; any mistake -> message -> back to the instructions (no limit,
-// as in the lab and ioc-wm). Every attempt is saved (quiz_attempt, quiz_passed, quiz_n_wrong).
+// All questions on one page; any mistake -> message -> back to the instructions. After
+// CONFIG.QUIZ_MAX_ATTEMPTS failed attempts the session stops (SESSION.stopped = 'quiz_failed_<name>';
+// the participant is sent back with SCREENED_OUT_CODE). Every attempt is saved (quiz_attempt, quiz_passed, quiz_wrong).
+// Use guardAfterQuiz() on the task timeline so the rest of the task is skipped after a failure.
 function instructionsWithQuiz(name, pages, quiz, failText) {
     const T = SESSION.T, C = T.common;
     const rtl = T.dir === 'rtl';
@@ -110,28 +125,32 @@ function instructionsWithQuiz(name, pages, quiz, failText) {
         on_finish: data => {
             const wrong = quiz.filter(q => data.response[q.name] !== q.options[q.correct]).map(q => q.name);
             passed = wrong.length === 0;
+            if (!passed && CONFIG.QUIZ_MAX_ATTEMPTS && attempt >= CONFIG.QUIZ_MAX_ATTEMPTS) SESSION.stopped = 'quiz_failed_' + name;
             Object.assign(data, { quiz_attempt: attempt, quiz_passed: passed ? 1 : 0, quiz_n_wrong: wrong.length,
                                   quiz_wrong: wrong.join(';') });
         },
     }, () => {
         quiz.forEach((q, i) => {
-            const el = document.getElementById(`jspsych-survey-multi-choice-response-${i}-${q.correct}`);
+            const pick = SESSION.bot_quiz_wrong ? (q.correct + 1) % q.options.length : q.correct;
+            const el = document.getElementById(`jspsych-survey-multi-choice-response-${i}-${pick}`);
             if (el) el.checked = true;
         });
         BOT.click('#jspsych-survey-multi-choice-next');
     });
 
+    const out = () => !!SESSION.stopped;
     const failed = {
         timeline: [withBot({
             type: jsPsychHtmlButtonResponse,
-            stimulus: () => pageHtml('', para(failText || C.QUIZ_FAILED)),
-            choices: [C.BACK_TO_INSTRUCTIONS],
+            stimulus: () => pageHtml('', para(out() ? fmt(C.QUIZ_OUT, { n: CONFIG.QUIZ_MAX_ATTEMPTS }) : (failText || C.QUIZ_FAILED))),
+            choices: () => [out() ? C.DAY_STOPPED_BUTTON : C.BACK_TO_INSTRUCTIONS],
+            on_finish: () => { if (out()) document.body.classList.remove('wm-background'); },
             data: { screen: 'quiz_failed', quiz: name },
         }, () => BOT.click('#jspsych-html-button-response-button-0'))],
         conditional_function: () => !passed,
     };
 
-    return { timeline: [instructions, quizTrial, failed], loop_function: () => !passed };
+    return { timeline: [instructions, quizTrial, failed], loop_function: () => !passed && !out(), isQuizLoop: true };
 }
 
 // Pictures for instruction pages, shared by bandit and calibration

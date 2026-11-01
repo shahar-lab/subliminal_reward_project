@@ -15,6 +15,10 @@ var TEXTS_EN = {
         NAV_HINT: 'Navigate with the arrow keys (&rarr; next, &larr; previous) or the buttons below.',
         QUIZ_SUBMIT: 'Submit answers',
         QUIZ_PREAMBLE: 'Please answer all questions to confirm you understood the instructions.',
+        QUIZ_OUT: 'Unfortunately, you made mistakes in the quiz {n} times.\nWe therefore have to end the experiment here.\n\n'
+                + 'Thank you for your time. You will now be redirected to Prolific.',
+        CALIB_ERROR: 'An error has occurred, and we have to end your participation in the study here.\n'
+                   + 'You will be paid for your participation nevertheless.\n\nThank you very much!',
         QUIZ_FAILED: 'You made a mistake in one or more of the questions.\n'
                    + 'We will now go back to the instructions - please read them again carefully and then answer the questions again.',
         BACK_TO_INSTRUCTIONS: 'Back to instructions',
@@ -48,7 +52,7 @@ var TEXTS_EN = {
         REDIRECT_LINK: 'If you are not redirected automatically, please click here:',
         THANK_YOU_END: 'Thank you! You may now close this window.',
         DAY_STOPPED: 'This part of the study has ended.\nThank you for your participation.',
-        DAY_STOPPED_BUTTON: 'Return to Prolific',
+        DAY_STOPPED_BUTTON: 'Continue',
         REFRESH_MEASURING: 'Preparing the experiment, please wait...',
     },
 
@@ -77,8 +81,9 @@ var TEXTS_EN = {
         ],
         PAGES_RULES: [
             { text: 'During the game you make choices to try to win gold coins.\n'
-                  + 'On each step you can get one gold coin, which looks like this:', reward_coin: true },
-            { text: 'or get no coin. In that case, the following coin is shown:', no_reward_coin: true },
+                  + 'Each gold coin adds {win} to a real bonus payment. A gold coin looks like this:', reward_coin: true },
+            { text: 'If you do not win, the following black coin is shown, and {loss} is taken off your bonus '
+                  + '(your bonus never goes below {zero}):', no_reward_coin: true },
             { text: 'The game has four locations, and each one gives a coin with a different chance when you choose it.\n\n'
                   + 'To choose, press one of four keys: S F H K.\n'
                   + 'The keys match the locations on the screen: S chooses the leftmost location, F the second from the left, and so on.',
@@ -105,8 +110,8 @@ var TEXTS_EN = {
                   + 'You have {time_limit} seconds to choose a location. If you do not choose in time, a message will appear and you will move '
                   + 'on to the next round with no coin and no chance to learn from that round.\n'
                   + 'Choosing a location with a grey circle will show the message "Choice not available!" and delay you for {penalty} seconds, with no coin.' },
-            { text: 'At the end of the game, the gold coins you collected will be counted. Your goal is to choose the right machines '
-                  + 'to collect as many gold coins as possible!\n\n'
+            { text: 'Your bonus is not shown during the game. It is counted, shown at the end of the game, and paid to you on Prolific '
+                  + 'in addition to your base payment. Your goal is to choose the right locations to collect as many gold coins as possible!\n\n'
                   + 'The game has {n_trials} choices, with {n_breaks} breaks. Remember: the goal is to win as many coins as possible.' },
             { text: 'We will now ask you a few questions to make sure the instructions are clear.\n'
                   + 'If you want to go over the instructions again, go back now with the left arrow key.' },
@@ -125,6 +130,8 @@ var TEXTS_EN = {
               options: ['Yes, some colours win more', 'No, only the location determines the chance of winning'], correct: 1 },
             { name: 'changing_odds', prompt: 'Are the chances of winning of each location fixed throughout the game?',
               options: ['Yes, they do not change', 'No, they change slowly during the game'], correct: 1 },
+            { name: 'bonus', prompt: 'What happens when the black coin is shown?',
+              options: ['Nothing', '{loss} is taken off my bonus (it never goes below {zero})', 'I lose my whole bonus'], correct: 1 },
             { name: 'time_limit', prompt: 'How much time do you have to choose a location on each round?',
               options: ['2 seconds', '{time_limit} seconds', 'There is no time limit'], correct: 1 },
         ],
@@ -133,7 +140,7 @@ var TEXTS_EN = {
         TOO_LATE: 'No location chosen in time',
         UNAVAILABLE: 'Choice not available!',
         BREAK: 'You have finished {done} of {total} parts - break.\nTake as long as you need.\n\nWhen you are ready, press the space bar.',
-        END_WITH_TOTAL: 'The game is over!\n\nYou collected {coins} gold coins.\n\nPress the space bar to continue.',
+        END_WITH_TOTAL: 'The game is over!\n\nYour bonus from this game: {bonus}.\n\nPress the space bar to continue.',
         END_NO_TOTAL: 'The game is over!\nThank you very much.\n\nPress the space bar to continue.',
     },
 

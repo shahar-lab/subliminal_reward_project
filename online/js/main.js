@@ -17,6 +17,9 @@
     const bot = botParam === '1' || botParam === 'full';
     const short = url.get('short') === '1' || botParam === '1';
     if (short) Object.assign(C, C.SHORT);
+    // test hooks (bot only): &test=quiz_fail (bot answers quizzes wrongly), &test=calib_cap (calibration cannot converge)
+    const testHook = bot ? url.get('test') : null;
+    if (testHook === 'calib_cap') Object.assign(C, { CALIB_MAX_TRIALS: 4, CALIB_CWIR_STOP: 1000 });
     const onPavlovia = /(^|\.)pavlovia\.org$/.test(window.location.hostname);
 
     let experimentEnded = true, blurCount = 0, fullscreenExitCount = 0;
@@ -43,9 +46,12 @@
     Object.assign(SESSION, {
         day, lang, T: lang === 'he' ? TEXTS_HE : TEXTS_EN, bot, short, jsPsych,
         on_pavlovia: onPavlovia, subject_id: subjectId,
-        gold_side: Math.random() < 0.5 ? 'left' : 'right',
-        stopped: false,
+        // counterbalancing from the character code of one ID character (CONFIG.ID_CHAR_INDEX; lab: numeric subject ID)
+        id_code: subjectId.charCodeAt(C.ID_CHAR_INDEX < 0 ? subjectId.length + C.ID_CHAR_INDEX : C.ID_CHAR_INDEX),
+        stopped: false,                 // '' / 'calibration_cap' / 'quiz_failed_<task>'
+        bot_quiz_wrong: testHook === 'quiz_fail',
     });
+    SESSION.gold_side = ((SESSION.id_code % 2 === 0) === C.GOLD_LEFT_FOR_EVEN_IDS) ? 'left' : 'right';
     document.documentElement.setAttribute('lang', lang);
     const T = SESSION.T;
 
@@ -56,7 +62,7 @@
         subject_id: subjectId, study_id: url.get('STUDY_ID') || 'not_provided',
         session_id: url.get('SESSION_ID') || 'not_provided', day: day, language: lang,
         experiment: C.EXPERIMENT_NAME, run_mode: bot ? (short ? 'bot' : 'bot_full') : (short ? 'short_demo' : 'real'),
-        device_type: isMobile ? 'mobile_or_tablet' : 'desktop', gold_side: SESSION.gold_side,
+        device_type: isMobile ? 'mobile_or_tablet' : 'desktop', gold_side: SESSION.gold_side, id_code: SESSION.id_code,
         user_agent: ua, screen_width: window.screen.width, screen_height: window.screen.height,
         device_pixel_ratio: window.devicePixelRatio || 1,
         session_start: new Date().toISOString(),
@@ -128,15 +134,15 @@
     timeline.push(messageScreen(T.common[day === 1 ? 'WELCOME_DAY1' : 'WELCOME_DAY2'] + '\n\n' + T.common.WELCOME_CONTINUE,
                                 { screen: 'welcome' }));
 
-    const notStopped = nodes => ({ timeline: nodes, conditional_function: () => !SESSION.stopped });
+    // a task runs only if nothing stopped the session before it (quiz failed / calibration did not converge)
     if (day === 1) {
-        timeline.push({ timeline: wmTimeline() });
-        timeline.push({ timeline: banditTimeline(1) });
+        timeline.push(unlessStopped(wmTimeline()));
+        timeline.push(unlessStopped(banditTimeline(1)));
     } else {
-        timeline.push({ timeline: calibrationTimeline() });
-        timeline.push(notStopped(banditTimeline(2)));
+        timeline.push(unlessStopped(calibrationTimeline()));
+        timeline.push(unlessStopped(banditTimeline(2)));
     }
-    timeline.push(notStopped(questionnairesTimeline()));
+    timeline.push(unlessStopped(questionnairesTimeline()));
 
     // end
     timeline.push(callFunction(() => {
@@ -145,16 +151,19 @@
     }));
     timeline.push({ timeline: [messageScreen(T.common.DAY_END, { screen: 'day_end' })],
                     conditional_function: () => !SESSION.stopped });
+    // calibration did not converge: 'an error occurred ... you will be paid' (quiz failures have their own screen)
     timeline.push({ timeline: [withBot({
-        type: jsPsychHtmlButtonResponse, stimulus: () => pageHtml('', para(T.common.DAY_STOPPED)),
+        type: jsPsychHtmlButtonResponse, stimulus: () => pageHtml('', para(T.common.CALIB_ERROR)),
         choices: [T.common.DAY_STOPPED_BUTTON], data: { screen: 'day_stopped' },
-    }, () => BOT.click('#jspsych-html-button-response-button-0'))], conditional_function: () => !!SESSION.stopped });
+    }, () => BOT.click('#jspsych-html-button-response-button-0'))], conditional_function: () => SESSION.stopped === 'calibration_cap' });
     if (!bot) timeline.push({ type: jsPsychFullscreen, fullscreen_mode: false });
 
     const fileId = `${subjectId}_day${day}`;
-    const completionCode = () => (SESSION.stopped ? C.SCREENED_OUT_CODE : C.COMPLETION_CODE[day]);
+    // quiz failed -> screened-out code; completed or calibration error -> normal completion code (paid)
+    const completionCode = () => (/^quiz_failed/.test(SESSION.stopped || '') ? C.SCREENED_OUT_CODE : C.COMPLETION_CODE[day]);
     function finalPage() {
         const code = completionCode();
+        window.__completionCode = code;   // read by tests/e2e_bot.js
         const dir = T.dir;
         if (!onPavlovia || bot || short || /^XXXX/.test(code)) {
             document.body.innerHTML = `<div class="end-page" dir="${dir}">${para(T.common.THANK_YOU_END)}</div>`;

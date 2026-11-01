@@ -53,8 +53,11 @@ Checks: `node tests/test_step.js` checks that the STEP staircase gives the same 
 4. Set it to **RUNNING**. On Prolific the study URL is
    `https://run.pavlovia.org/Shahar_Lab/subliminal-reward-pilot/?day=1&PROLIFIC_PID={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}`
    (and `day=2` for the Day-2 study).
-5. Put the Prolific completion codes in `js/config.js` (`COMPLETION_CODE`, `SCREENED_OUT_CODE`).
+5. Put the Prolific completion codes in `js/config.js`:
+   - `COMPLETION_CODE`, for each day: finished, or calibration error (the participant is paid);
+   - `SCREENED_OUT_CODE`: quiz failed 3 times.
    While a code starts with `XXXX`, participants are not redirected.
+6. Pay the bonus: the `bandit_bonus` column (in £) of each session's CSV.
 
 Data: one CSV per session in the Pavlovia project's `data/` folder, named
 `<experiment>_<PROLIFIC_PID>_day<1|2>_SESSION_<date>.csv`.
@@ -91,14 +94,15 @@ tests/, tools/             checks and the Hebrew text exporter
 
 ## Data columns (main ones)
 
-Every row: `subject_id`, `day`, `language`, `run_mode`, `refresh_hz`, `gold_side`, `wm_same_key`, `blur_count`,
-`fullscreen_exit_count`, `device_type`, `screen_width/height`.
+Every row: `subject_id`, `day`, `language`, `run_mode`, `refresh_hz`, `gold_side`, `id_code`, `wm_same_key`,
+`bandit_bonus`, `stopped` (empty, `quiz_failed_<task>` or `calibration_cap`), `blur_count`, `fullscreen_exit_count`,
+`device_type`, `screen_width/height`.
 
 - **Casino trials** (`trial_type = casino-trial`, `task = bandit | calibration`):
   - which trial: `phase` (practice / main / calibration), `block`, `trial`
   - the offer: `offered_arms`, `colour_arm0-3`, `p_arm0-3`, `outcome_draw`
   - the response: `choice_key`, `choice_arm`, `choice_colour`, `rt`, `missed`, `unavailable_choice`
-  - the outcome: `reward`, `reward_oneback`, `coins_total`, `coin_shown`, `coin_opacity`
+  - the outcome: `reward`, `reward_oneback`, `coins_total`, `bonus_change`, `bonus_total` (£), `coin_shown`, `coin_opacity`
   - timing: `t_*` (frame timestamps, in ms)
   - awareness answers: `pas`, `seen`, `coin_chosen`, `twoafc_correct`
   - calibration only: all STEP columns (`boundary_*`, `cwir_*`, `step`, `next_intensity`, ...)

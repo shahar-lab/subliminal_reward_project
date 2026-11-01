@@ -27,7 +27,8 @@ const CONFIG = {
     // PLACEHOLDER: Prolific completion codes. While they start with 'XXXX' the
     // participant is NOT redirected at the end (they see a thank-you page).
     COMPLETION_CODE: { 1: 'XXXX_DAY1', 2: 'XXXX_DAY2' },
-    SCREENED_OUT_CODE: 'XXXX_SCREENED',   // calibration failure (if CALIB_CAP_ACTION = 'stop')
+    SCREENED_OUT_CODE: 'XXXX_SCREENED',   // quiz failed QUIZ_MAX_ATTEMPTS times (as ioc-all's screening code)
+    // A calibration that does not converge ends the session with the normal COMPLETION_CODE (participant is paid).
     ENABLE_CAPTCHA: true,                 // reCAPTCHA, only when running on pavlovia.org (as in ioc-wm)
     RECAPTCHA_SITE_KEY: '6Lfy684qAAAAAEScfxhF2CxfoYJFfhKcQmxe-FuV',   // the lab key used by ioc-wm / ioc-all
     BLOCK_MOBILE: true,                   // desktop-only gate, as in ioc-wm
@@ -47,29 +48,32 @@ const CONFIG = {
     ARM_KEYS: ['KeyS', 'KeyF', 'KeyH', 'KeyK'],   // left -> right
     ARM_KEY_NAMES: ['s', 'f', 'h', 'k'],
 
-    // ─── Casino scene layout (px, origin = screen centre, y up) ───────────────
-    // Original pixel layout: arms 100 px, circles r = 30 px, x = +-100/+-300 px,
-    // feedback box 100 px at y = 200 px, coin/mask 80 px.
-    ARM_X_POSITIONS: [-300, -100, 100, 300],
-    ARM_Y: 0,
-    ARM_SIZE: 100,
+    // ─── Visual angle -> pixels ───────────────────────────────────────────────
+    // Sizes are given in degrees (same values as ../config.py) and converted assuming the
+    // participant sits VIEWING_DISTANCE_CM from the screen and 1 CSS px = 1/96 inch (the CSS
+    // standard; real screens differ somewhat - accepted for the pilot). As in the lab
+    // ('degFlatPos'): positions use exact visual angle (D * tan), sizes the deg->cm factor at the centre.
+    VIEWING_DISTANCE_CM: 60,
+    CSS_PX_PER_CM: 96 / 2.54,
+
+    // ─── Casino scene layout (deg, origin = screen centre, y up; converted to px below) ──
+    ARM_X_POSITIONS_DEG: [-7.9, -2.6, 2.6, 7.9],
+    ARM_Y_DEG: 0.0,
+    ARM_SIZE_DEG: 2.6,
     ARM_COLOR: '#a9a9a9',                 // PsychoPy 'darkgray'
-    CIRCLE_RADIUS: 30,
+    CIRCLE_RADIUS_DEG: 0.8,
     CIRCLE_INACTIVE_COLOR: '#808080',     // 'gray'
     CIRCLE_ACTIVE_COLORS: ['#ff0000', '#0000ff', '#008000', '#ffff00'],   // red, blue, green, yellow (PsychoPy names)
     CIRCLE_COLOR_NAMES: ['red', 'blue', 'green', 'yellow'],
     N_ACTIVE_ARMS: 2,
-    FEEDBACK_POS: [0, 200],
-    FEEDBACK_BOX_SIZE: 100,
+    FEEDBACK_POS_DEG: [0.0, 5.3],
+    FEEDBACK_BOX_SIZE_DEG: 2.6,
     FEEDBACK_BOX_COLOR: '#a9a9a9',
-    COIN_SIZE: 80,
-    MASK_SIZE: 80,
+    COIN_SIZE_DEG: 2.1,
+    MASK_SIZE_DEG: 2.1,
     MESSAGE_COLOR: '#ff0000',
-    MESSAGE_FONT_PX: 30,
+    MESSAGE_HEIGHT_DEG: 0.8,
     // message between the reward box and the arms (as MESSAGE_POS in config.py)
-    get MESSAGE_POS() {
-        return [0, ((this.FEEDBACK_POS[1] - this.FEEDBACK_BOX_SIZE / 2) + (this.ARM_Y + this.ARM_SIZE / 2)) / 2];
-    },
 
     // ─── Stimulus files ───────────────────────────────────────────────────────
     COIN_REWARD_IMAGE: 'stimuli/coin_reward.png',
@@ -92,9 +96,17 @@ const CONFIG = {
     // Day 2 uses the final threshold of the calibration run earlier in the same session.
 
     // ─── Awareness questions (PAS + coin choice) ──────────────────────────────
-    // ONLINE: gold side is random per participant (lab: subject-ID parity). Saved as gold_side.
-    CHOICE_COIN_X: 150,                   // px
-    CHOICE_COIN_SIZE: 100,                // px
+    // Gold side: parity of the character code of one character of the participant ID (ID_CHAR_INDEX)
+    // (lab: parity of the numeric subject ID). Saved as gold_side.
+    GOLD_LEFT_FOR_EVEN_IDS: true,
+    // Which ID character is used: 0 = first (as asked), -1 = last.
+    // WARNING: Prolific IDs are MongoDB ObjectIds; the FIRST characters encode the account creation time,
+    // so almost all start with '5' or '6' -> gold side and WM keys would follow account age and be fully
+    // confounded with each other ('5' -> right + s, '6' -> left + k). The LAST character is a counter
+    // (uniform over 0-9a-f), which balances both and keeps them independent. Recommended: -1.
+    ID_CHAR_INDEX: 0,
+    CHOICE_COIN_X_DEG: 4.0,
+    CHOICE_COIN_SIZE_DEG: 2.6,
 
     // ─── STEP calibration (Day 2) ─────────────────────────────────────────────
     CALIB_N_BLOCKS: 2,
@@ -108,11 +120,12 @@ const CONFIG = {
     CALIB_MIN_TRIALS: 50,
     CALIB_MAX_TRIALS: 300,
     CALIB_GOLD_PROBABILITY: 0.5,
-    // ONLINE: what happens if a block reaches CALIB_MAX_TRIALS without converging.
+    // What happens if a block reaches CALIB_MAX_TRIALS without converging.
+    //   'stop'     - as in the lab: the session ends; the participant is told an error occurred and
+    //                that they will be paid, and is sent back with the normal COMPLETION_CODE
     //   'continue' - use the threshold computed so far (flagged calibration_status = cap_reached_blockN)
-    //                and run the casino game anyway (pilot: keep the participant, exclude later if needed)
-    //   'stop'     - as in the lab: end the session (participant sent back with SCREENED_OUT_CODE)
-    CALIB_CAP_ACTION: 'continue',
+    //                and run the casino game anyway
+    CALIB_CAP_ACTION: 'stop',
     // used only if 'continue' and the staircase has no incorrect answer at all (threshold undefined)
     CALIB_FALLBACK_OPACITY: 0.1,
 
@@ -125,6 +138,12 @@ const CONFIG = {
     WALK_STEP_SD: 0.05,
     WALK_MIN_PROB: 0.0,
     WALK_MAX_PROB: 1.0,
+    // ONLINE: money bonus. Gold coin +BONUS_WIN, black coin -BONUS_LOSS, never below 0 (practice not counted).
+    // The bonus is NOT shown during the game; it is shown at the end of each day's game (SHOW_TOTAL_DAY)
+    // and saved as bandit_bonus (pay it on Prolific).
+    BONUS_WIN: 0.05,
+    BONUS_LOSS: 0.05,
+    BONUS_CURRENCY: '£',
     SHOW_TOTAL_DAY: { 1: true, 2: true },
     AWARENESS_PROBE_RATE: { 1: 0.0, 2: 0.0 },   // fraction of trials followed by PAS + coin choice
 
@@ -144,7 +163,12 @@ const CONFIG = {
     WM_RETENTION_DURATION: 900,
     WM_RESPONSE_LIMIT: 6000,
     WM_FEEDBACK_DURATION: 500,
-    WM_KEYS: ['s', 'k'],                  // ONLINE: same/different mapping random per participant (as ioc-wm)
+    WM_KEYS: ['s', 'k'],                  // SAME key = WM_KEYS[(code of first ID character // 2) % 2] (lab: ID // 2)
+
+    // ─── Quizzes ──────────────────────────────────────────────────────────────
+    // Wrong answers -> back to the instructions; after QUIZ_MAX_ATTEMPTS failed attempts the session
+    // ends (as ioc-all) and the participant is sent back with SCREENED_OUT_CODE. null = no limit.
+    QUIZ_MAX_ATTEMPTS: 3,
 
     // ─── Questionnaires (end of each day) ─────────────────────────────────────
     QUESTIONNAIRE_FINAL_QUESTIONS: true,
@@ -159,3 +183,19 @@ const CONFIG = {
     BOT_RESPONSE_DELAY: 150,              // ms the bot waits before answering
     BOT_WM_ACCURACY: 0.85,
 };
+
+// ─── degrees -> CSS pixels (the code uses only the px values below) ──────────
+(function (C) {
+    const cmPerDegSize = C.VIEWING_DISTANCE_CM * Math.PI / 180;
+    const size = deg => deg * cmPerDegSize * C.CSS_PX_PER_CM;
+    const pos = deg => C.VIEWING_DISTANCE_CM * Math.tan(deg * Math.PI / 180) * C.CSS_PX_PER_CM;
+    Object.assign(C, {
+        ARM_X_POSITIONS: C.ARM_X_POSITIONS_DEG.map(pos), ARM_Y: pos(C.ARM_Y_DEG), ARM_SIZE: size(C.ARM_SIZE_DEG),
+        CIRCLE_RADIUS: size(C.CIRCLE_RADIUS_DEG), FEEDBACK_POS: C.FEEDBACK_POS_DEG.map(pos),
+        FEEDBACK_BOX_SIZE: size(C.FEEDBACK_BOX_SIZE_DEG), COIN_SIZE: size(C.COIN_SIZE_DEG), MASK_SIZE: size(C.MASK_SIZE_DEG),
+        MESSAGE_FONT_PX: size(C.MESSAGE_HEIGHT_DEG),
+        CHOICE_COIN_X: pos(C.CHOICE_COIN_X_DEG), CHOICE_COIN_SIZE: size(C.CHOICE_COIN_SIZE_DEG),
+    });
+    // message between the reward box and the arms (as MESSAGE_POS in config.py)
+    C.MESSAGE_POS = [0, ((C.FEEDBACK_POS[1] - C.FEEDBACK_BOX_SIZE / 2) + (C.ARM_Y + C.ARM_SIZE / 2)) / 2];
+})(CONFIG);

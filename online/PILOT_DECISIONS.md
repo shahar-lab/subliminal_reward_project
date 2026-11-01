@@ -4,6 +4,11 @@ Written by Claude on 2026-11-01, during the port of the PsychoPy experiment to j
 for every open question to be decided reasonably and reported. Each item below gives what was chosen,
 the other options, and where to change it. Nothing in the lab (PsychoPy) code was changed.
 
+**Alon's answers (2026-11-01), now implemented:** English yes (8); coin 33 ms yes (13); calibration cap
+stops the session with an error message and the normal completion code (18); counterbalancing from the first
+character of the ID (19, 20); quizzes 3 attempts then out (17); money bonus ±£0.05, floor 0, shown only at the
+end (7); sizes in degrees at an assumed 60 cm (15). Still open: one vs two Pavlovia projects (2).
+
 ## Platform and setup
 
 | # | Decision | Other options | Where |
@@ -14,7 +19,7 @@ the other options, and where to change it. Nothing in the lab (PsychoPy) code wa
 | 4 | **Same scaffolding as ioc-wm:** desktop-only gate, preload, reCAPTCHA (lab key, only on pavlovia.org), fullscreen, pause + alert on blur, `blur_count` / `fullscreen_exit_count` on every row, Pavlovia finish, then Prolific redirect. | Drop CAPTCHA / blur pause for the pilot. | `config.js` (`ENABLE_CAPTCHA`, `PAUSE_ON_BLUR`, `BLOCK_MOBILE`) |
 | 5 | **Prolific completion codes are placeholders** (`XXXX_...`). While they start with XXXX, there is no redirect. | | `config.js` `COMPLETION_CODE` |
 | 6 | **No consent screen.** ioc-wm also has none (Prolific handles consent). | Add ioc-all's `consent.js` with the IRB text. | |
-| 7 | **No monetary bonus**, as in the lab decision: the coins collected are shown at the end. ioc-all pays a £ bonus. | Pay a bonus per coin (needs text and quiz changes). | `texts_*.js` |
+| 7 | **DONE - money bonus:** gold coin +£0.05, black coin −£0.05, never below £0; practice not counted. Not shown during the game; shown on the end screen of each day's game. Saved as `bonus_change` / `bonus_total` (per trial) and `bandit_bonus` (every row). Mentioned in the instructions, plus a new quiz question about the black coin. *Choice made:* "presented at the end" = the end of each day's game, because each day is a separate Prolific study and paid separately. | Show only once, at the end of Day 2: the two sessions do not share data, so Day 2 would have to look up Day 1's bonus. | `config.js` `BONUS_*`, `SHOW_TOTAL_DAY` |
 
 ## Language and texts
 
@@ -32,17 +37,18 @@ the other options, and where to change it. Nothing in the lab (PsychoPy) code wa
 | 12 | **Frame-counted timing on a canvas** for the whole casino trial (a custom jsPsych plugin), not `trial_duration`. The refresh rate is measured at the start, and every screen lasts round(duration / frame) frames, at least 1. The coin and masks are drawn in `requestAnimationFrame`. Measured durations and dropped-frame counts are saved for every trial. | Plain jsPsych `html-keyboard-response` with `trial_duration: 33`. That is much less reliable: often 1-3 frames. | `plugin-casino-trial.js`, `display.js` |
 | 13 | **Coin 33 ms on both days** (the design value; the lab `config.py` still has the 3 s DEBUG value). On Day 1 the coin is at full opacity but still masked (33 ms backward mask), exactly as the lab code does. **Please confirm Day 1 should be masked.** | Day 1 coin unmasked / longer. | `config.js` `FEEDBACK_COIN_DURATION` (per day) |
 | 14 | **No exclusion by refresh rate.** 144 Hz screens give 5 frames = 34.7 ms. `refresh_hz` and `low_refresh_flag` are saved. | Block participants who are not at 60/120 Hz. | `config.js` |
-| 15 | **Sizes in CSS pixels**: the original pixel layout (arms 100 px, coin 80 px, ...). There is no chin rest or screen measurement online, so visual angle varies between participants. | Add a virtual-chinrest (credit card) step to scale to degrees. | `config.js` layout block |
+| 15 | **DONE - sizes in degrees** (the same values as `config.py`), converted assuming 60 cm viewing distance and the CSS standard of 96 px per inch (1° ≈ 39.6 px). Positions use exact visual angle, as `degFlatPos` does. WM stays in pixels, as in ioc-wm and the lab. | Virtual chinrest. | `config.js` `VIEWING_DISTANCE_CM` and the `*_DEG` values |
 | 16 | **WM uses normal jsPsych timing**, as in ioc-wm (200 ms array via `trial_duration`). | Frame-count it too. | `wm.js` |
 
 ## Task logic
 
 | # | Decision | Other options | Where |
 |---|---|---|---|
-| 17 | **Quizzes: all questions on one page, mouse answers, unlimited retries** (as in the lab and ioc-wm). Every attempt is saved (`quiz_attempt`, `quiz_wrong`). The lab shows one question per screen and answers with number keys. | Limit to 3 attempts and screen out, as in ioc-all. | `common.js` `instructionsWithQuiz` |
-| 18 | **Calibration cap: `continue`.** If a block reaches 300 trials without converging, the participant goes on with the threshold computed so far. This is flagged in `calibration_status`. The lab stops the day. With no incorrect answers at all, a fallback opacity of 0.1 is used. | `'stop'`: end the session and send the participant back with `SCREENED_OUT_CODE`. | `config.js` `CALIB_CAP_ACTION`, `CALIB_FALLBACK_OPACITY` |
-| 19 | **Gold-coin side in the coin choice: random per participant** (saved as `gold_side`). The lab uses subject-ID parity, but Prolific IDs are not numbers. | Derive it from a hash of the ID. | `main.js` |
-| 20 | **WM same/different keys: random per participant** (as ioc-wm; saved as `wm_same_key`). The lab uses ID // 2. | | `wm.js` |
+| 17 | **DONE - quizzes: 3 attempts, then out** (as ioc-all), for every quiz (WM, calibration, casino). After the 3rd failure the participant sees a "we have to end the experiment" screen, the data are saved, and they are sent back with `SCREENED_OUT_CODE`. All questions are on one page, answered with the mouse. | | `config.js` `QUIZ_MAX_ATTEMPTS` |
+| 18 | **DONE - calibration cap stops the session:** the participant sees "An error has occurred ... you will be paid for your participation nevertheless", the data are saved (`stopped = calibration_cap`), and they are sent back with the normal `COMPLETION_CODE`. No casino game and no questionnaires. | `'continue'` is still available. | `config.js` `CALIB_CAP_ACTION` |
+| 19 | **DONE - gold-coin side** = parity of the character code of the first character of the Prolific ID (even → gold left), as the lab's ID parity. Saved as `gold_side` and `id_code`. | | `main.js`, `config.js` `GOLD_LEFT_FOR_EVEN_IDS` |
+| 20 | **DONE - WM same key** = `WM_KEYS[(code // 2) % 2]`, using the same character code, as the lab's ID // 2 (so it is independent of the gold side). Saved as `wm_same_key`. | | `wm.js` |
+| 20b | **⚠ Please decide: first vs last character.** Prolific IDs are MongoDB ObjectIds. Their first characters are a timestamp of the account creation, so almost all IDs start with `5` or `6` (see the ioc-wm data file names). With the first character, gold side and WM keys follow account age, and they are fully confounded with each other (`5` → gold right + `s` = same; `6` → gold left + `k` = same). The last character is a counter, uniform over 0-9/a-f: balanced and independent. **Implemented as asked (first, `ID_CHAR_INDEX: 0`); recommended: `-1`.** | `ID_CHAR_INDEX: -1` | `config.js` `ID_CHAR_INDEX` |
 | 21 | **Bandit random numbers:** a seeded mulberry32 generator, with the seed saved as `bandit_seed`. Within the online version a seed regenerates the session exactly, but it does not reproduce the PsychoPy sequence for the same seed. The walk rule (Gaussian SD 0.05, start 0.5, clipped to 0-1) is unchanged. | Pre-generated walk files shared by both versions (`REWARD_WALK = 'file'` in the lab). | `schedule.js` |
 | 22 | **WM practice: 5 trials** (lab `WM_N_PRACTICE`), repeated until all set-size-1 trials are correct. ioc-wm uses 15. | 15 as ioc-wm. | `config.js` `WM_N_PRACTICE` |
 | 23 | **In-task awareness probe off** (`AWARENESS_PROBE_RATE` 0), as in the lab config. When it is on, the PAS and coin-choice questions are already implemented inside the trial. | Turn it on for Day 2, e.g. 0.1. | `config.js` |
@@ -54,8 +60,10 @@ the other options, and where to change it. Nothing in the lab (PsychoPy) code wa
 - `node tests/test_step.js`: the JS STEP staircase is identical to `tasks/calibration/step.py`, trial by trial and in the
   threshold, on 12 simulated runs (732 trials).
 - `node tests/e2e_bot.js`: both days, in English and Hebrew, run start to end with the automatic participant in
-  headless Chromium (60 Hz). It checks trial counts, rewards against the schedule, the coin duration in frames,
-  that Day 2 uses the calibrated opacity, the WM K row, and the IMI summary.
+  headless Chromium (60 Hz). It checks trial counts, rewards against the schedule, the bonus arithmetic, the coin
+  duration in frames, that Day 2 uses the calibrated opacity, the WM K row, the IMI summary and the completion code.
+  It also runs three stop scenarios: the quiz failed 3 times on Day 1 and on Day 2 (gives the screened-out code),
+  and a calibration that cannot converge (gives the error screen and the normal completion code).
 - Screenshots of instructions, quiz, casino trial and coin choice (English and Hebrew) were checked by eye.
 - **Not tested:** the real Pavlovia upload (no access from the session), reCAPTCHA, real monitors, Firefox and Safari.
   Before collecting data, do one pilot run on Pavlovia (PILOTING mode) and check the CSV in the project's `data/` folder.

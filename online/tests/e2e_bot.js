@@ -46,21 +46,27 @@ function check(cond, msg) {
     if (!cond) throw new Error('CHECK FAILED: ' + msg);
 }
 
-async function runDay(browser, base, day, lang) {
+async function load(browser, base, query, name) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));
     page.on('console', m => { if (m.type() === 'error' && !/recaptcha|ERR_|Failed to load resource/i.test(m.text())) errors.push(m.text()); });
-    const t0 = Date.now();
-    await page.goto(`${base}/index.html?day=${day}&lang=${lang}&bot=1`);
+    await page.goto(`${base}/index.html?${query}`);
     await page.waitForFunction(() => window.__experimentDone === true, null, { timeout: 15 * 60 * 1000, polling: 500 });
     const csv = await page.evaluate(() => window.__experimentCsv);
+    const code = await page.evaluate(() => window.__completionCode);
     await page.close();
     fs.mkdirSync(OUT, { recursive: true });
-    const file = path.join(OUT, `bot_day${day}_${lang}.csv`);
+    const file = path.join(OUT, `${name}.csv`);
     fs.writeFileSync(file, csv);
-    const rows = parseCsv(csv);
     check(errors.length === 0, `page errors: ${errors.join(' | ')}`);
+    return { rows: parseCsv(csv), code, file };
+}
+
+async function runDay(browser, base, day, lang) {
+    const t0 = Date.now();
+    const { rows, code, file } = await load(browser, base, `day=${day}&lang=${lang}&bot=1`, `bot_day${day}_${lang}`);
+    check(code === `XXXX_DAY${day}`, `completion code ${code}`);
     const casino = rows.filter(r => r.trial_type === 'casino-trial');
     const valid = casino.filter(r => r.coin_shown);
     const coin = valid.map(r => +r.coin_duration_measured);
@@ -77,6 +83,14 @@ async function runDay(browser, base, day, lang) {
         check(n === 1, `exactly one of missed/unavailable/reward per trial (trial ${r.trial})`);
         if (r.reward !== '') check((+r.outcome_draw < +r['p_arm' + r.choice_arm]) === (r.reward === '1'), 'reward follows the schedule');
     });
+    // bonus: +0.05 / -0.05, never below 0, main trials only; the last value is the session bonus
+    let cents = 0;
+    bandit.filter(r => r.phase === 'main').forEach(r => {
+        if (r.reward === '1') cents += 5; else if (r.reward === '0') cents = Math.max(0, cents - 5);
+        check(Math.abs(+r.bonus_total - cents / 100) < 1e-9, `bonus_total ${r.bonus_total} vs ${cents / 100}`);
+    });
+    check(Math.abs(+rows[rows.length - 1].bandit_bonus - cents / 100) < 1e-9, 'bandit_bonus property');
+    summary.bonus = cents / 100;
     // coin duration = planned frames, except on trials flagged as having long (dropped) frames
     const clean = valid.filter(r => r.feedback_long_frames === '0');
     clean.forEach(r => check(Math.abs(+r.coin_duration_measured - (+r.coin_frames) * (+r.frame_ms)) < 0.5 * (+r.frame_ms),
@@ -103,6 +117,27 @@ async function runDay(browser, base, day, lang) {
     console.log('OK', JSON.stringify(summary));
 }
 
+// Stop scenarios: quiz failed 3 times (Day 1 and Day 2) and a calibration that cannot converge.
+async function runStops(browser, base) {
+    for (const day of [1, 2]) {
+        const { rows, code } = await load(browser, base, `day=${day}&bot=1&test=quiz_fail`, `stop_quiz_day${day}`);
+        const quizzes = rows.filter(r => r.screen === 'quiz');
+        check(quizzes.length === 3 && quizzes.every(r => r.quiz_passed === '0'), `day ${day}: 3 failed quiz attempts`);
+        check(rows[rows.length - 1].stopped === `quiz_failed_${day === 1 ? 'wm' : 'calibration'}`, 'stopped flag');
+        check(!rows.some(r => r.trial_type === 'casino-trial' || r.screen === 'wm_test' || r.phase === 'imi'), 'nothing runs after the quiz');
+        check(code === 'XXXX_SCREENED', `quiz fail -> screened-out code (${code})`);
+        console.log(`OK stop: quiz failed (day ${day}) -> ${code}`);
+    }
+    const { rows, code } = await load(browser, base, 'day=2&bot=1&test=calib_cap', 'stop_calib_cap');
+    const cal = rows.filter(r => r.task === 'calibration' && r.trial_type === 'casino-trial');
+    check(cal.length === 4, `one capped block of 4 trials (${cal.length})`);
+    check(rows.some(r => r.screen === 'day_stopped'), 'error screen shown');
+    check(!rows.some(r => r.task === 'bandit' && r.trial_type === 'casino-trial') && !rows.some(r => r.phase === 'imi'), 'no bandit / questionnaires');
+    check(rows[rows.length - 1].stopped === 'calibration_cap', 'stopped flag');
+    check(code === 'XXXX_DAY2', `calibration cap -> normal completion code (${code})`);
+    console.log(`OK stop: calibration cap -> ${code}`);
+}
+
 (async () => {
     const server = await serve();
     const base = `http://localhost:${server.address().port}`;
@@ -111,6 +146,9 @@ async function runDay(browser, base, day, lang) {
     let failed = false;
     for (const [day, lang] of runs) {
         try { await runDay(browser, base, +day, lang); } catch (e) { failed = true; console.error(`day ${day} ${lang}:`, e.message); }
+    }
+    if (!process.argv.slice(2).length) {
+        try { await runStops(browser, base); } catch (e) { failed = true; console.error('stop scenarios:', e.message); }
     }
     await browser.close();
     server.close();
