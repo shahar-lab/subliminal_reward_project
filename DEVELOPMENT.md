@@ -142,3 +142,7 @@ Add a line for every behaviour change (date – what – why).
 - 2026-10-24 – Calibration practice trials removed.
 - 2026-10-24 – `--manual-demo`: the short bot session played by a human (data in `data/demo/`).
 - 2026-10-24 – No monetary bonus: money removed from the casino instructions, quiz (payment question deleted), end screen and data (`payment_shekel`, `COIN_VALUE_SHEKEL`); colour sentence shortened.
+- 2026-11-01 – `online/`: jsPsych port of both days for an online pilot (Pavlovia + Prolific); see
+  `online/README.md` and `online/PILOT_DECISIONS.md`. The lab code is unchanged. If you change `texts/`, run
+  `python online/tools/export_hebrew_texts.py`; if you change `tasks/calibration/step.py`, regenerate
+  `online/tests/step_reference.json` and run `node online/tests/test_step.js`.
