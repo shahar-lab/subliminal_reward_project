@@ -11,15 +11,10 @@ Flow:
      so it looks exactly like a calibration trial.
   3. A summary is printed in the console and saved as the last rows of the check CSV.
 
-Pilot-only settings (changed in memory here; config.py and the other modules are NOT changed):
-  * FEEDBACK_COIN_DURATION = 0.033 (config.py still has the 3 s DEBUG value).
-  * Data go to data/pilot_calib_check/ (its own calibration_summary.csv; never mixed with real data).
-  * FRAME_TIMING = True: the mask / coin / mask screens are shown for a whole number of refreshes
-    ("draw + flip N times") instead of flip + core.wait(). Only the timing changes; the drawing is
-    still CasinoScene.feedback_sequence(), in both calibration and check. Set False to use the
-    experiment's current core.wait() timing.
-NOTE: the <date>_config.py copy saved with the data still shows config.py as on disk (3 s coin);
-the values actually used are in the 'pilot_*' columns of both CSVs.
+Coin duration and timing method are the experiment's own (config.py: FEEDBACK_COIN_DURATION,
+TIMING_METHOD), so the pilot shows the coin exactly as the real Day 2 does.
+The only pilot-only setting: data go to data/pilot_calib_check/ (its own calibration_summary.csv;
+never mixed with real data).
 """
 import math
 import os
@@ -30,21 +25,17 @@ import config
 # ─── Pilot settings ────────────────────────────────────────────────────────────
 N_CHECK_TRIALS = 200
 CHECK_BREAK_EVERY = 50            # break screen after every this many check trials
-COIN_DURATION = 0.033             # s - the design value (2 refreshes at 60 Hz)
-FRAME_TIMING = True
 PILOT_DATA_DIR = os.path.join(config.DATA_DIR, 'pilot_calib_check')
 CHECK_TASK = 'calibration_check'
 SHORT_RUN = {'N_CHECK_TRIALS': 6, 'CHECK_BREAK_EVERY': 3}   # --bot / --manual-demo
 
-# Applied before anything reads them (bot / manual-demo then add their own subfolder to DATA_DIR)
-config.FEEDBACK_COIN_DURATION = COIN_DURATION
+# Applied before anything reads it (bot / manual-demo then add their own subfolder to DATA_DIR)
 config.DATA_DIR = PILOT_DATA_DIR
 if '--bot' in sys.argv or '--manual-demo' in sys.argv:
     N_CHECK_TRIALS, CHECK_BREAK_EVERY = SHORT_RUN['N_CHECK_TRIALS'], SHORT_RUN['CHECK_BREAK_EVERY']
 
 from scipy.stats import binomtest, norm    # noqa: E402
 
-from common import scene as scene_module   # noqa: E402
 from common.awareness import AwarenessQuestions   # noqa: E402
 from common.day import run_day             # noqa: E402
 from common.io import TaskData             # noqa: E402
@@ -61,37 +52,13 @@ CHECK_BREAK = 'הפסקה ({done} מתוך {n} צעדים).\nנצלו אותה �
 CHECK_END = 'סיימתם. תודה!'
 
 
-# ─── Task 0: settings that need the open window ────────────────────────────────
+# ─── Task 0: record the pilot settings ────────────────────────────────────────
 def setup_pilot(ctx):
-    """Install frame-counted timing for the feedback sequence (if FRAME_TIMING) and record the settings."""
-    hz = ctx.runtime.get('refresh_measured_hz') or config.EXPECTED_REFRESH_HZ
-    frames = lambda duration: max(1, round(duration * hz))   # noqa: E731
-    coin_frames = frames(COIN_DURATION)
-    if abs(COIN_DURATION * hz - coin_frames) > 0.2:
-        print(f'WARNING: {COIN_DURATION * 1000:.1f} ms is not a whole number of refreshes at {hz:.2f} Hz '
-              f'- the coin will be shown for {coin_frames} refreshes = {coin_frames / hz * 1000:.1f} ms.')
-
-    if FRAME_TIMING:
-        def frame_show(win, draw, duration=None):
-            """Same contract as common.display.show(), but the screen stays for a whole number of
-            refreshes: every flip waits for the next refresh, so N flips = exactly N refreshes."""
-            draw()
-            t_flip = win.flip()
-            if duration:
-                for _ in range(frames(duration) - 1):
-                    draw()
-                    win.flip()
-            return t_flip
-        scene_module.show = frame_show        # only CasinoScene (mask / coin / mask) uses it
-
-    ctx.runtime.update({'pilot_timing': 'frames' if FRAME_TIMING else 'core.wait',
-                        'pilot_refresh_hz_used': hz,
-                        'pilot_coin_duration_s': COIN_DURATION,
-                        'pilot_coin_frames': coin_frames if FRAME_TIMING else '',
-                        'pilot_n_check_trials': N_CHECK_TRIALS})
-    print(f'PILOT: coin {COIN_DURATION * 1000:.1f} ms, timing = {ctx.runtime["pilot_timing"]}'
-          + (f' ({coin_frames} refreshes at {hz:.2f} Hz)' if FRAME_TIMING else '')
-          + f', data in {config.DATA_DIR}')
+    ctx.runtime['pilot_n_check_trials'] = N_CHECK_TRIALS   # saved in both CSVs (calibration and check)
+    print(f'PILOT: coin {config.FEEDBACK_COIN_DURATION * 1000:.1f} ms, timing {ctx.runtime["timing_method"]}'
+          + (f' ({ctx.runtime["coin_frames"]} refreshes at {ctx.runtime["frame_hz_used"]:.2f} Hz)'
+             if ctx.runtime['timing_method'] == 'frames' else '')
+          + f', {N_CHECK_TRIALS} check trials, data in {config.DATA_DIR}')
 
 
 # ─── Task 2: the check phase ───────────────────────────────────────────────────
@@ -131,7 +98,7 @@ def summarize(rows):
     hit = (sum(r['coin_chosen'] == REWARD for r in gold) + 0.5) / (len(gold) + 1)
     fa = (sum(r['coin_chosen'] == REWARD for r in black) + 0.5) / (len(black) + 1)
     durations = [r['coin_duration_measured'] for r in rows if r.get('coin_duration_measured') is not None]
-    nominal = COIN_DURATION
+    nominal = config.FEEDBACK_COIN_DURATION
     s = {
         'n_trials': n,
         'accuracy': n_correct / n,
@@ -171,7 +138,7 @@ def print_summary(s, opacity):
 
 
 TASKS = [
-    setup_pilot,          # frame timing + pilot settings (needs the open window)
+    setup_pilot,          # prints and records the pilot settings
     calibration.run,      # unchanged Day-2 STEP calibration -> ctx.calibration_threshold
     check,                # N_CHECK_TRIALS at the calibrated opacity
 ]

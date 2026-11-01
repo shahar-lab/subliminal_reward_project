@@ -6,7 +6,7 @@
 What it shows:
   1. A Hebrew text page, including mixed Hebrew/English (key names) - check the word order.
   2. The casino scene: 6 trials = 3 opacities (1.0, 0.5, 0.2) x gold / black coin,
-     using the feedback timing from config.py (coin is still the DEBUG 3 s).
+     using the feedback timing and TIMING_METHOD from config.py.
   3. A 2-question quiz (checked at the end) and one Likert item.
 At the end it prints the measured refresh rate and the measured coin and
 backward-mask durations of every trial, and saves them to demo_timing.txt.
@@ -76,7 +76,8 @@ def report(win_info, rows):
     lines = [f'refresh expected {win_info["refresh_expected_hz"]} Hz, '
              f'measured {win_info["refresh_measured_hz"]} Hz, window {win_info["window_size_pix"]}',
              f'config: coin {config.FEEDBACK_COIN_DURATION * 1000:.1f} ms, '
-             f'backward mask {config.FEEDBACK_BWD_MASK_DURATION * 1000:.1f} ms',
+             f'backward mask {config.FEEDBACK_BWD_MASK_DURATION * 1000:.1f} ms, '
+             f'timing {win_info["timing_method"]} (coin = {win_info["coin_frames"]} refreshes)',
              'opacity  coin       coin_ms  bwd_mask_ms']
     for r in rows:
         if 'coin_opacity' in r:
