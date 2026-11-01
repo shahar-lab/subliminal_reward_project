@@ -46,6 +46,7 @@ User-facing instructions (setup, running a session, data files) are in `README.m
 | change task order or add a task | the `TASKS` list in `run_day_1.py` / `run_day_2.py` |
 | add a data column | add it to the row dict in the task's `run_trial()`; keep the key present (value None) on trials where it doesn't apply |
 | change the coin pair | `COIN_REWARD_IMAGE`, `COIN_NO_REWARD_IMAGE` in `config.py` (open decision: luminance-matched pair) |
+| pilot the calibration alone (calibration + trials at the threshold) | `calibration_check_main.py` (settings at its top; see README) |
 | turn on the in-task awareness probe | `AWARENESS_PROBE_RATE` in `config.py` (adds a sentence to the Day-2 instructions automatically) |
 
 After any change: `python -m pytest tests` and `python run_day_1.py --bot` / `run_day_2.py --bot`.
@@ -72,8 +73,16 @@ After any change: `python -m pytest tests` and `python run_day_1.py --bot` / `ru
 - **Refresh-rate measurement** (~10–20 s) runs only once per computer + screen setup; the result is cached in
   `display_cache.json` (keyed by Windows MachineGuid, screen size, full-screen/window and the refresh rate
   Windows reports, so a new monitor or setting triggers a new measurement). `--remeasure` forces it.
+- **Pilot script, no shared code changed:** `calibration_check_main.py` overrides config values in memory
+  (before `run_day`) and swaps `common.scene.show` for a frame-counted version after the window opens.
+  `common/scene.py` imports `show` by name, so patching `common.scene.show` affects only the
+  mask–coin–mask sequence, not instructions or the calibration's 1 s pre-feedback wait.
 - **Testing headless:** the code was developed and tested with PsychoPy 2024.2.4 and 2026.2.4 under a
   virtual display (xvfb). Real timing can only be checked on the real screen (`demo_scene.py`, photodiode).
+  Under Xvfb the refresh rate measures ~160 Hz and flips do not wait for a refresh, so
+  `coin_duration_measured` is meaningless there (frame timing showed ~17 ms). Check timing on a real screen only.
+  On Python 3.13 `pip install psychopy` fails; use Python 3.10/3.11 (PsychoPy 2026.2.4 installs on 3.11;
+  Xvfb also needs the system packages libglu1-mesa and libegl1).
 
 ## 4. Decision log (what was decided, and why)
 
@@ -142,3 +151,8 @@ Add a line for every behaviour change (date – what – why).
 - 2026-10-24 – Calibration practice trials removed.
 - 2026-10-24 – `--manual-demo`: the short bot session played by a human (data in `data/demo/`).
 - 2026-10-24 – No monetary bonus: money removed from the casino instructions, quiz (payment question deleted), end screen and data (`payment_shekel`, `COIN_VALUE_SHEKEL`); colour sentence shortened.
+- 2026-11-01 – `calibration_check_main.py` (new file, no existing code changed): pilot = Day-2 calibration
+  → 200 trials at the calibrated opacity → summary (2AFC accuracy vs chance, accuracy at PAS 0, d′, PAS
+  distribution, measured coin duration). Pilot-only, in memory: 33 ms coin, frame-counted mask/coin/mask
+  timing, data in `data/pilot_calib_check/`. Purpose: check that the threshold is subliminal, and test
+  frame-counted timing on a real screen (open timing decision, principle 6).

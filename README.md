@@ -97,11 +97,45 @@ Bot data go to `data/bot/`, manual-demo data to `data/demo/`, both with subject 
 All flags work for `run_day_2.py` too. In `--manual-demo` nothing is automatic, so you can try every option:
 wrong quiz answers, a grey arm, waiting out the time limit, Escape, etc.
 
+## Pilot: calibration check (`calibration_check_main.py`)
+
+Is the STEP threshold really subliminal? Run on yourself (or a pilot participant):
+
+```
+python calibration_check_main.py                 full pilot (~25-35 min), dialog asks for the subject ID
+python calibration_check_main.py --manual-demo   short version (few calibration + 6 check trials), you play
+python calibration_check_main.py --bot           short version, simulated participant
+```
+
+Flow: the unchanged Day-2 calibration → 200 trials at the calibrated opacity (fixed, no staircase,
+same trial as calibration: empty arms → mask–coin–mask → PAS → gold/black choice, break every 50) → summary.
+No casino game, no questionnaires.
+
+Pilot-only settings, applied in memory at the top of the file (`config.py` is NOT changed):
+- coin = **33 ms** (`config.py` still has the 3 s DEBUG value);
+- **frame-counted timing** (`FRAME_TIMING = True`): mask / coin / mask are shown for a whole number of
+  refreshes (draw + flip N times) instead of flip + `core.wait()`. Same drawing code (`CasinoScene`) in
+  calibration and check. Set `FRAME_TIMING = False` to use the experiment's current timing;
+- data go to `data/pilot_calib_check/` (own `calibration_summary.csv`; never mixed with real data).
+  The `_config.py` copy there shows `config.py` as on disk; the values used are in the `pilot_*` columns.
+
+Output: `sub-XXX_day2_calibration_<date>.csv` (as on Day 2) and `sub-XXX_day2_calibration_check_<date>.csv`
+(one row per check trial + `check_summary` rows, also printed in the console):
+
+| measure | what a subliminal threshold should look like |
+|---|---|
+| `accuracy`, `binom_p_above_chance` | 2AFC accuracy ≈ 0.5, not significantly above chance |
+| `accuracy_pas0` | same, on trials rated PAS 0 only |
+| `d_prime`, `criterion`, `p_choose_gold` | d′ ≈ 0; criterion / P(gold) show a gold-black response bias |
+| `pas0_proportion` … `pas3_proportion` | mostly PAS 0 |
+| `coin_ms_mean/min/max`, `coin_n_too_long` | ≈ 33.3 ms on every trial at 60 Hz; values far from that = the display is not vsync-locked |
+
 ## Code layout
 
 ```
 config.py              every tunable value, with comments
 run_day_1.py, run_day_2.py
+calibration_check_main.py   pilot: calibration + 200 trials at the threshold (see above)
 common/                shared building blocks
   display.py           window, monitor profile, flip timestamps
   scene.py             THE casino screen and the mask–coin–mask sequence (used by bandit and calibration)
