@@ -10,6 +10,22 @@ what" table, gotchas already solved (Hebrew RTL wrapping, typed Hebrew, display 
 decision log, and a changelog. When you change behaviour, add a changelog line (date – what – why) and,
 if relevant, a decision-log entry there. `README.md` is the user-facing doc (setup, lab-PC checklist, data files).
 
+## STATUS.md: keep it current
+
+Work here often stops partway through a chat, so `STATUS.md` records where things stand. A new chat should
+be able to answer "what are all the open strands?" from that file alone.
+
+- **Read `STATUS.md` at the start of a session.** When asked about open strands, answer from it, check each
+  item against the code and git log, and say which ones look stale.
+- **Update it after each major step, not only at the end of the session:** a feature or fix finished, a
+  decision made, a plan set, or work left half done. Write as you go, since a chat can stop at any point.
+- For each open strand, write what it is, its state (not started / in progress / blocked / waiting on a
+  decision), the files or branch involved, and the concrete next step. Write half-done work so that
+  someone else can pick it up.
+- When a strand is finished, remove it and add one line under "Recently done" with the date. Record the
+  lasting decisions and behaviour changes in `DEVELOPMENT.md` (decision log and changelog) as well.
+  `STATUS.md` holds only what is current and is not a history.
+
 ## Commands
 
 ```bash
