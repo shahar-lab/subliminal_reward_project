@@ -99,12 +99,12 @@ const CONFIG = {
     // Gold side: parity of the character code of one character of the participant ID (ID_CHAR_INDEX)
     // (lab: parity of the numeric subject ID). Saved as gold_side.
     GOLD_LEFT_FOR_EVEN_IDS: true,
-    // Which ID character is used: 0 = first (as asked), -1 = last.
+    // Which ID character is used: -1 = last (decided by Alon 2026-11-03), 0 = first.
     // WARNING: Prolific IDs are MongoDB ObjectIds; the FIRST characters encode the account creation time,
     // so almost all start with '5' or '6' -> gold side and WM keys would follow account age and be fully
     // confounded with each other ('5' -> right + s, '6' -> left + k). The LAST character is a counter
     // (uniform over 0-9a-f), which balances both and keeps them independent. Recommended: -1.
-    ID_CHAR_INDEX: 0,
+    ID_CHAR_INDEX: -1,
     CHOICE_COIN_X_DEG: 4.0,
     CHOICE_COIN_SIZE_DEG: 2.6,
 
