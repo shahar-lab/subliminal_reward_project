@@ -114,10 +114,15 @@ CHOICE_TIME_LIMIT = 6.0
 WAIT_INITIAL = 1.0               # empty arms before circles appear (acts as ITI)
 WAIT_POST_CHOICE = 1.0           # empty arms after the choice, before the first mask
 FEEDBACK_FWD_MASK_DURATION = 1.0
-FEEDBACK_COIN_DURATION = 3.0     # DEBUG - design value is 0.033; kept long so the coin can be inspected
+FEEDBACK_COIN_DURATION = 0.033   # 2 refreshes at 60 Hz, 4 at 120 Hz (must be a whole number of refreshes)
 FEEDBACK_BWD_MASK_DURATION = 0.033
 INVALID_MSG_DURATION = 1.0       # 'too late' message after a miss
 UNAVAILABLE_CHOICE_DURATION = 3.0   # penalty screen after choosing a grey (unavailable) arm
+# How a screen is kept for its duration (common/display.py::show()):
+#   'frames'    = draw + flip N times, N = round(duration x measured refresh rate): exactly N refreshes.
+#   'core.wait' = flip once, then core.wait(duration) (the original prototype; a 33 ms coin can become 50 ms).
+TIMING_METHOD = 'frames'
+FRAME_TOLERANCE = 0.1            # warn at startup if a feedback duration is off a whole refresh count by more than this
 KEY_POLL_INTERVAL = 0.001        # sleep between keyboard polls (RT comes from key timestamps)
 
 # ─── Feedback opacity ──────────────────────────────────────────────────────────

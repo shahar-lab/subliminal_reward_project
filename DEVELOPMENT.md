@@ -20,14 +20,17 @@ User-facing instructions (setup, running a session, data files) are in `README.m
    The only extra file is `data/calibration_summary.csv` (in addition, not instead).
 5. **Logic is separated from drawing where it matters**, so it can be unit-tested without a screen:
    `tasks/calibration/step.py` (STEP), `tasks/bandit/schedule.py`, the pure functions in `tasks/wm/run.py`.
-6. **Timing policy (until decided):** durations are produced with `core.wait()` after `win.flip()`, as in the
-   original prototype. Every flip time is logged (`t_*` columns), and measured durations are saved
-   (`coin_duration_measured` etc.). Changing to frame-counted timing is an open decision - do it in
-   `common/display.py::show()` so every task changes at once.
+6. **Timing: frame-counted** (`config.TIMING_METHOD = 'frames'`, decided 1 Nov 2026). Every timed screen goes
+   through `common/display.py::show()`, which draws + flips the screen N = round(duration × refresh rate)
+   times (refresh rate measured by `open_window()`, cached per computer). Every flip time is logged
+   (`t_*` columns), and measured durations are saved (`coin_duration_measured` etc.); the window info in
+   every CSV has `timing_method`, `frame_hz_used`, `coin_frames`. `TIMING_METHOD = 'core.wait'` restores the
+   prototype's flip + `core.wait()`.
    *Why it matters:* a screen can only change at a monitor refresh (16.7 ms at 60 Hz). `core.wait(0.033)`
-   ends just before the 2nd refresh, so any small delay makes the coin last 3 refreshes (50 ms) instead of 2.
-   Frame-counted timing ("draw + flip N times") shows exactly N refreshes, but every duration must then be a
-   whole number of refreshes (33.3 ms works at 60/120 Hz, not at 144 Hz). Coin duration is part of the
+   ends 0.3 ms before the 2nd refresh, so if drawing the next screen takes longer, the coin lasts 3 refreshes
+   (50 ms) instead of 2. With frame counting every flip waits for the refresh, so N flips = exactly N refreshes,
+   but every duration must be a whole number of refreshes (33.3 ms works at 60/120 Hz, not at 144 Hz;
+   `open_window()` warns), and the screen's flips must be vsync-locked (check with `demo_scene.py`). Coin duration is part of the
    subliminal manipulation, so it must be identical in calibration and task. Lab-PC checks: README,
    "Lab PC checklist".
 7. **Each day is a list of task functions** (`run_day_1.py`, `run_day_2.py`). A task is `task(ctx)`;
@@ -46,6 +49,7 @@ User-facing instructions (setup, running a session, data files) are in `README.m
 | change task order or add a task | the `TASKS` list in `run_day_1.py` / `run_day_2.py` |
 | add a data column | add it to the row dict in the task's `run_trial()`; keep the key present (value None) on trials where it doesn't apply |
 | change the coin pair / scene greys | `STIMULUS_VERSION` in `config.py` (and in `online/js/config.js`); rationale and how to make a matched coin: `stimuli/COIN_PAIR.md`, `stimuli/make_silver_coin.py` |
+| pilot the calibration alone (calibration + trials at the threshold) | `calibration_check_main.py` (settings at its top; see README) |
 | turn on the in-task awareness probe | `AWARENESS_PROBE_RATE` in `config.py` (adds a sentence to the Day-2 instructions automatically) |
 
 After any change: `python -m pytest tests` and `python run_day_1.py --bot` / `run_day_2.py --bot`.
@@ -72,8 +76,14 @@ After any change: `python -m pytest tests` and `python run_day_1.py --bot` / `ru
 - **Refresh-rate measurement** (~10–20 s) runs only once per computer + screen setup; the result is cached in
   `display_cache.json` (keyed by Windows MachineGuid, screen size, full-screen/window and the refresh rate
   Windows reports, so a new monitor or setting triggers a new measurement). `--remeasure` forces it.
+- **Pilot script:** `calibration_check_main.py` changes only `config.DATA_DIR`, in memory, before `run_day`
+  (so its data and calibration summary never mix with real data). Everything else is the real code.
 - **Testing headless:** the code was developed and tested with PsychoPy 2024.2.4 and 2026.2.4 under a
   virtual display (xvfb). Real timing can only be checked on the real screen (`demo_scene.py`, photodiode).
+  Under Xvfb the refresh rate measures ~160 Hz and flips do not wait for a refresh, so
+  `coin_duration_measured` is meaningless there (frame-counted coin measured ~17 ms). Check timing on a real screen only.
+  On Python 3.13 `pip install psychopy` fails; use Python 3.10/3.11 (PsychoPy 2026.2.4 installs on 3.11;
+  Xvfb also needs the system packages libglu1-mesa and libegl1).
 
 ## 4. Decision log (what was decided, and why)
 
@@ -85,6 +95,11 @@ Decided by Alon during code finalization, 22–23 Oct 2026:
 - One participant dialog per day; Escape aborts (data kept); `ExperimentHandler` only for data.
 - Quizzes: one question per screen, checked after ALL answers; any mistake → message → back to instructions.
 - Likert 1–7 left → right, as on the keyboard.
+
+**Display timing** (1 Nov 2026)
+- Coin 33 ms (`FEEDBACK_COIN_DURATION = 0.033`; the 3 s debug value is gone) and frame-counted timing for
+  every screen of every task (`TIMING_METHOD = 'frames'`), so the coin cannot slip to 50 ms when drawing the
+  backward mask takes longer than the 0.3 ms `core.wait()` left.
 
 **STEP calibration** (`tasks/calibration/`)
 - Ported from Eden Elbaz's `ISI_calcu.py` (paper's Experiment 3: contrast 1 → step 0.2, −0.05/trial,
@@ -135,7 +150,7 @@ Decided by Alon during code finalization, 22–23 Oct 2026:
 ## 5. Open items (code-related)
 
 See the status report ("Points to address and open decisions" and the to-do list) for the full list.
-In short: restore the 3 s debug coin; lab-PC monitor values; timing method; awareness probe; reward walk
+In short: lab-PC monitor values; verify vsync-locked 33 ms on the lab screen (demo_scene.py, photodiode); awareness probe; reward walk
 source; Day-2 total display; end-of-day strategy/awareness questions; review of the
 calibration quiz wording; move `rl_task/`, `step_calibration/`, `config.json` to `legacy/`.
 
@@ -151,6 +166,15 @@ Add a line for every behaviour change (date – what – why).
 - 2026-10-24 – Calibration practice trials removed.
 - 2026-10-24 – `--manual-demo`: the short bot session played by a human (data in `data/demo/`).
 - 2026-10-24 – No monetary bonus: money removed from the casino instructions, quiz (payment question deleted), end screen and data (`payment_shekel`, `COIN_VALUE_SHEKEL`); colour sentence shortened.
+- 2026-11-01 – `calibration_check_main.py` (new file, no existing code changed): pilot = Day-2 calibration
+  → 200 trials at the calibrated opacity → summary (2AFC accuracy vs chance, accuracy at PAS 0, d′, PAS
+  distribution, measured coin duration). Pilot-only, in memory: 33 ms coin, frame-counted mask/coin/mask
+  timing, data in `data/pilot_calib_check/`. Purpose: check that the threshold is subliminal, and test
+  frame-counted timing on a real screen (open timing decision, principle 6).
+- 2026-11-01 – Coin duration set to 33 ms (debug 3 s removed) and frame-counted timing for every screen
+  (`TIMING_METHOD = 'frames'`, `common/display.py::show()`); startup warning if 33 ms is not a whole number
+  of refreshes; `timing_method`, `frame_hz_used`, `coin_frames` saved with every task. The pilot no longer
+  needs its own coin / timing overrides. Why: a 33 ms coin produced with `core.wait()` can last 50 ms.
 - 2026-11-01 – `online/`: jsPsych port of both days for an online pilot (Pavlovia + Prolific); see
   `online/README.md` and `online/PILOT_DECISIONS.md`. The lab code is unchanged. If you change `texts/`, run
   `python online/tools/export_hebrew_texts.py`; if you change `tasks/calibration/step.py`, regenerate

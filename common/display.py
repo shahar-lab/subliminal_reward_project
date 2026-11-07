@@ -1,8 +1,11 @@
 """Window creation, monitor profile and flip helpers.
 
-Timing policy (until decided - see status report "Display timing method"):
-durations are produced with core.wait() after win.flip(), exactly as before.
-The only addition is that every flip's timestamp is returned so it can be logged.
+Timing (config.TIMING_METHOD): every timed screen goes through show().
+  'frames'    - the screen is drawn and flipped N times, N = round(duration x refresh rate).
+                Each flip waits for the next refresh, so the screen lasts exactly N refreshes.
+  'core.wait' - one flip, then core.wait(duration) (the original prototype's method).
+The refresh rate is the one measured by open_window() (cached per computer). Every flip's
+timestamp is returned so it can be logged.
 """
 import json
 import os
@@ -16,6 +19,7 @@ from psychopy import visual, monitors, core, logging
 import config
 
 DISPLAY_CACHE = os.path.join(config.ROOT_DIR, 'display_cache.json')   # per computer, not in git
+_frame_hz = None   # refresh rate used for frame-counted timing; set by open_window()
 
 
 def windows_display_scaling():
@@ -129,13 +133,19 @@ def open_window(fullscreen=None):
     win.mouseVisible = not config.HIDE_MOUSE
 
     measured, source = measure_refresh(win, fullscreen)
+    global _frame_hz
+    _frame_hz = measured or config.EXPECTED_REFRESH_HZ
     info = {'refresh_expected_hz': config.EXPECTED_REFRESH_HZ,
             'refresh_measured_hz': measured,
             'refresh_source': source,
             'refresh_windows_reported_hz': reported_refresh_hz(),
             'window_size_pix': tuple(int(v) for v in win.size),
             'fullscreen': fullscreen,
-            'windows_display_scaling_pct': windows_display_scaling()}
+            'windows_display_scaling_pct': windows_display_scaling(),
+            'timing_method': config.TIMING_METHOD,
+            'frame_hz_used': _frame_hz if config.TIMING_METHOD == 'frames' else None,
+            'coin_frames': n_frames(config.FEEDBACK_COIN_DURATION) if config.TIMING_METHOD == 'frames' else None}
+    check_frame_durations()
     scaling = info['windows_display_scaling_pct']
     if scaling not in (None, 100):
         msg = (f'Windows display scaling is {scaling}% - set it to 100% on the experiment PC '
@@ -153,14 +163,40 @@ def open_window(fullscreen=None):
     return win, info
 
 
+def n_frames(duration):
+    """Number of refreshes that frame-counted timing shows for a duration (at least 1)."""
+    return max(1, round(duration * (_frame_hz or config.EXPECTED_REFRESH_HZ)))
+
+
+def check_frame_durations():
+    """Warn if a feedback duration is not (close to) a whole number of refreshes, e.g. 33 ms at 144 Hz."""
+    if config.TIMING_METHOD != 'frames':
+        return
+    hz = _frame_hz or config.EXPECTED_REFRESH_HZ
+    for name in ('FEEDBACK_COIN_DURATION', 'FEEDBACK_BWD_MASK_DURATION'):
+        duration = getattr(config, name)
+        if abs(duration * hz - round(duration * hz)) > config.FRAME_TOLERANCE:
+            msg = (f'{name} = {duration * 1000:.1f} ms is not a whole number of refreshes at {hz:.2f} Hz; '
+                   f'it will be shown for {n_frames(duration)} refreshes = {n_frames(duration) / hz * 1000:.1f} ms.')
+            logging.warning(msg)
+            print('WARNING: ' + msg)
+
+
 def show(win, draw, duration=None):
-    """Draw a screen, flip, optionally wait, and return the flip timestamp.
+    """Draw a screen, flip, keep it for `duration` seconds, and return the timestamp of the first flip.
 
     draw: a function that draws everything for this screen (no flip).
-    duration: seconds to wait after the flip (core.wait), or None to return at once.
+    duration: seconds the screen stays, or None to return right after the flip (the next show() or a
+              key wait follows). With TIMING_METHOD 'frames' the screen is redrawn and flipped until it has
+              been up n_frames(duration) refreshes; the next screen then appears on the following refresh.
     """
     draw()
     t_flip = win.flip()
     if duration:
-        core.wait(duration)
+        if config.TIMING_METHOD == 'frames':
+            for _ in range(n_frames(duration) - 1):
+                draw()
+                win.flip()
+        else:
+            core.wait(duration)
     return t_flip

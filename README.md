@@ -31,7 +31,6 @@ the decision log, and a changelog to update.
 
 ## Before collecting real data
 
-- `config.py`: `FEEDBACK_COIN_DURATION` is **3.0 s for debugging** – restore it to `0.033`.
 - `config.py`: replace every value marked `PLACEHOLDER` with the experiment PC's values.
 - Open decisions that are config switches are listed in the status report (e.g. `REWARD_WALK`,
   `AWARENESS_PROBE_RATE`, `SHOW_TOTAL_DAY`, `WM_BALANCED_CONDITIONS`).
@@ -39,7 +38,10 @@ the decision log, and a changelog to update.
 ## Lab PC checklist (display and timing)
 
 The coin must be shown for exactly 33 ms in calibration and task alike. On a 60 Hz screen that is
-2 refreshes; a missed refresh makes it 50 ms. Check before the first participant:
+2 refreshes. All screen durations are frame-counted (`TIMING_METHOD = 'frames'` in `config.py`): each
+screen is flipped for a whole number of refreshes, so the coin cannot slip to 50 ms - provided the
+screen's flips are locked to its refresh (vsync), which is what the checks below verify. Check before the
+first participant:
 
 1. One monitor, native resolution, **Windows scaling 100%**. Turn off adaptive sync (G-Sync/FreeSync),
    HDR, Night light, eye-care / dynamic-contrast modes.
@@ -50,13 +52,13 @@ The coin must be shown for exactly 33 ms in calibration and task alike. On a 60 
    and viewing distance (cm), use a chin rest.
    The experiment measures the refresh rate once per computer and screen setup and caches it in
    `display_cache.json`; after changing monitor settings run once with `--remeasure` (e.g. `python run_day_1.py --remeasure`).
-6. Restore `FEEDBACK_COIN_DURATION = 0.033` (debug value is 3 s).
-7. `python demo_scene.py` (full screen) → `demo_timing.txt`: coin and backward mask should read ~33.3 ms on
-   every trial. 50 ms values = dropped refreshes; odd in-between values = timestamps not locked to the
-   refresh (seen on the development laptop: 34.8–36.5 ms).
-8. If available, verify the 33 ms coin with a photodiode.
-9. `python run_day_1.py --bot-real` once, to check session length and smoothness.
-10. After the pilot: check `coin_duration_measured` in the bandit and calibration files.
+6. `python demo_scene.py` (full screen) → `demo_timing.txt`: coin and backward mask should read ~33.3 ms on
+   every trial. 50 ms values = dropped refreshes; odd in-between values = flips not locked to the
+   refresh (seen on the development laptop with the earlier `core.wait()` timing: 34.8–36.5 ms).
+   A startup warning appears if 33 ms is not a whole number of refreshes at the measured rate.
+7. If available, verify the 33 ms coin with a photodiode.
+8. `python run_day_1.py --bot-real` once, to check session length and smoothness.
+9. After the pilot: check `coin_duration_measured` in the bandit and calibration files.
 
 ## Running a session
 
@@ -99,11 +101,42 @@ Bot data go to `data/bot/`, manual-demo data to `data/demo/`, both with subject 
 All flags work for `run_day_2.py` too. In `--manual-demo` nothing is automatic, so you can try every option:
 wrong quiz answers, a grey arm, waiting out the time limit, Escape, etc.
 
+## Pilot: calibration check (`calibration_check_main.py`)
+
+Is the STEP threshold really subliminal? Run on yourself (or a pilot participant):
+
+```
+python calibration_check_main.py                 full pilot (~25-35 min), dialog asks for the subject ID
+python calibration_check_main.py --manual-demo   short version (few calibration + 6 check trials), you play
+python calibration_check_main.py --bot           short version, simulated participant
+```
+
+Flow: the real Day-2 calibration → 200 trials at the calibrated opacity (fixed, no staircase,
+same trial as calibration: empty arms → mask–coin–mask → PAS → gold/black choice, break every 50) → summary.
+No casino game, no questionnaires.
+
+Coin duration (33 ms) and timing (frame-counted) come from `config.py`, exactly as on the real Day 2.
+The only pilot-only setting: data go to `data/pilot_calib_check/` (own `calibration_summary.csv`; never
+mixed with real data). Number of check trials and breaks: `N_CHECK_TRIALS`, `CHECK_BREAK_EVERY` at the top
+of the file.
+
+Output: `sub-XXX_day2_calibration_<date>.csv` (as on Day 2) and `sub-XXX_day2_calibration_check_<date>.csv`
+(one row per check trial + `check_summary` rows, also printed in the console):
+
+| measure | what a subliminal threshold should look like |
+|---|---|
+| `accuracy`, `binom_p_above_chance` | 2AFC accuracy ≈ 0.5, not significantly above chance |
+| `accuracy_pas0` | same, on trials rated PAS 0 only |
+| `d_prime`, `criterion`, `p_choose_gold` | d′ ≈ 0; criterion / P(gold) show a gold-black response bias |
+| `pas0_proportion` … `pas3_proportion` | mostly PAS 0 |
+| `coin_ms_mean/min/max`, `coin_n_too_long` | ≈ 33.3 ms on every trial at 60 Hz; values far from that = the display is not vsync-locked |
+
 ## Code layout
 
 ```
 config.py              every tunable value, with comments
 run_day_1.py, run_day_2.py
+calibration_check_main.py   pilot: calibration + 200 trials at the threshold (see above)
 common/                shared building blocks
   display.py           window, monitor profile, flip timestamps
   scene.py             THE casino screen and the mask–coin–mask sequence (used by bandit and calibration)
