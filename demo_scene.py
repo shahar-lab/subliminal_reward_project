@@ -5,7 +5,7 @@
 
 What it shows:
   1. A Hebrew text page, including mixed Hebrew/English (key names) - check the word order.
-  2. The casino scene: 6 trials = 3 opacities (1.0, 0.5, 0.2) x gold / black coin,
+  2. The casino scene: 6 trials = 3 opacities (1.0, 0.5, 0.2) x gold / silver coin,
      using the feedback timing from config.py (coin is still the DEBUG 3 s).
   3. A 2-question quiz (checked at the end) and one Likert item.
 At the end it prints the measured refresh rate and the measured coin and
@@ -30,7 +30,7 @@ DEMO_PAGES = [
      'text': 'זהו עמוד הוראות לדוגמה. בדקו שהטקסט מיושר לימין ושסדר המילים תקין.\n'
              "בדיקת מילים באנגלית: לחצו על המקשים s, f, h או k כדי לבחור מיקום."},
     {'title': 'דוגמה עם תמונות',
-     'text': 'כך נראה מטבע הזהב (משמאל) והמטבע השחור (מימין):',
+     'text': 'כך נראה מטבע הזהב (משמאל) והמטבע הכסוף (מימין):',
      'images': [(config.COIN_REWARD_IMAGE, (-3, 0), config.COIN_SIZE),
                 (config.COIN_NO_REWARD_IMAGE, (3, 0), config.COIN_SIZE)]},
 ]

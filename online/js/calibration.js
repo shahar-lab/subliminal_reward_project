@@ -27,7 +27,7 @@ function calibrationTimeline() {
             const text = fmt(spec.text, { gold_key: goldKey, black_key: blackKey });
             let pic = '';
             if (spec.scene) pic = DISPLAY.sceneImageHtml({ circles: null, coin: { outcome: 'reward', opacity: 1 } });
-            if (spec.coins) {   // gold on the right, black on the left (as the text says), as in the lab version
+            if (spec.coins) {   // gold on the right, silver on the left (as the text says), as in the lab version
                 pic = `<div class="choice-coins" dir="ltr" style="gap:${2 * C.CHOICE_COIN_X - C.CHOICE_COIN_SIZE}px">`
                     + coinImg(C.COIN_NO_REWARD_IMAGE) + coinImg(C.COIN_REWARD_IMAGE) + '</div>';
             }

@@ -82,7 +82,7 @@ var TEXTS_EN = {
         PAGES_RULES: [
             { text: 'During the game you make choices to try to win gold coins.\n'
                   + 'Each gold coin adds {win} to a real bonus payment. A gold coin looks like this:', reward_coin: true },
-            { text: 'If you do not win, the following black coin is shown, and {loss} is taken off your bonus '
+            { text: 'If you do not win, the following silver coin is shown, and {loss} is taken off your bonus '
                   + '(your bonus never goes below {zero}):', no_reward_coin: true },
             { text: 'The game has four locations, and each one gives a coin with a different chance when you choose it.\n\n'
                   + 'To choose, press one of four keys: S F H K.\n'
@@ -130,7 +130,7 @@ var TEXTS_EN = {
               options: ['Yes, some colours win more', 'No, only the location determines the chance of winning'], correct: 1 },
             { name: 'changing_odds', prompt: 'Are the chances of winning of each location fixed throughout the game?',
               options: ['Yes, they do not change', 'No, they change slowly during the game'], correct: 1 },
-            { name: 'bonus', prompt: 'What happens when the black coin is shown?',
+            { name: 'bonus', prompt: 'What happens when the silver coin is shown?',
               options: ['Nothing', '{loss} is taken off my bonus (it never goes below {zero})', 'I lose my whole bonus'], correct: 1 },
             { name: 'time_limit', prompt: 'How much time do you have to choose a location on each round?',
               options: ['2 seconds', '{time_limit} seconds', 'There is no time limit'], correct: 1 },
@@ -152,7 +152,7 @@ var TEXTS_EN = {
             { text: 'The coin will appear in the upper square on the screen, above the four grey squares - just like in the casino game you played yesterday.\n'
                   + 'In this part you do not need to choose a location. Ignore the squares in the row, and attend only to the coin.',
               scene: true },
-            { text: 'The coin will be gold (right) or black (left):', coins: true },
+            { text: 'The coin will be gold (right) or silver (left):', coins: true },
             { text: 'The coin will appear for a very short time. Right before and right after it, a black-and-white picture '
                   + 'that looks like this will appear in the square:\n\n'
                   + 'The short presentation and the black-and-white picture are meant to make the coin hard to see.', mask: true },
@@ -162,7 +162,7 @@ var TEXTS_EN = {
                   + '1 - I saw a vague flash, I don\'t know what it was\n'
                   + '2 - I saw the coin almost clearly\n'
                   + '3 - I saw the coin clearly\n\n'
-                  + 'Second question: Which coin did you see? The gold coin - the {gold_key} arrow, the black coin - the {black_key} arrow.' },
+                  + 'Second question: Which coin did you see? The gold coin - the {gold_key} arrow, the silver coin - the {black_key} arrow.' },
             { text: 'Sometimes you will not manage to identify the coin. In that case, when you are asked which coin you saw, '
                   + 'do your best and answer by your gut feeling.\n\n'
                   + 'The purpose of this part is to find the coin intensity that suits you personally.\n'

@@ -56,28 +56,38 @@ const CONFIG = {
     VIEWING_DISTANCE_CM: 60,
     CSS_PX_PER_CM: 96 / 2.54,
 
+    // ─── Coin pair and scene greys: STIMULUS VERSION (same as ../config.py) ─────
+    // Decided by Alon on 7 Nov 2026 - rationale and measurements: ../stimuli/COIN_PAIR.md.
+    //   'v2_gold_silver_matched' (current): silver no-reward coin with the same mean and SD of luminance as the
+    //        gold coin; reward box and arms #7c7c7c (124); unavailable circles #a9a9a9 (169).
+    //   'v1_gold_black' (until 7 Nov 2026): black coin, box and arms #a9a9a9 ('darkgray'), circles #808080 ('gray').
+    //        The texts call the coin "silver" since v2; going back also needs the v1 texts (see COIN_PAIR.md).
+    STIMULUS_VERSION: 'v2_gold_silver_matched',
+    STIMULUS_VERSIONS: {
+        v1_gold_black: { no_reward_coin: 'stimuli/coin_no_reward.png',
+                         arm_color: '#a9a9a9', box_color: '#a9a9a9', circle_inactive_color: '#808080' },
+        v2_gold_silver_matched: { no_reward_coin: 'stimuli/coin_no_reward_silver.png',
+                                  arm_color: '#7c7c7c', box_color: '#7c7c7c', circle_inactive_color: '#a9a9a9' },
+    },
+
     // ─── Casino scene layout (deg, origin = screen centre, y up; converted to px below) ──
     ARM_X_POSITIONS_DEG: [-7.9, -2.6, 2.6, 7.9],
     ARM_Y_DEG: 0.0,
     ARM_SIZE_DEG: 2.6,
-    ARM_COLOR: '#a9a9a9',                 // PsychoPy 'darkgray'
     CIRCLE_RADIUS_DEG: 0.8,
-    CIRCLE_INACTIVE_COLOR: '#808080',     // 'gray'
     CIRCLE_ACTIVE_COLORS: ['#ff0000', '#0000ff', '#008000', '#ffff00'],   // red, blue, green, yellow (PsychoPy names)
     CIRCLE_COLOR_NAMES: ['red', 'blue', 'green', 'yellow'],
     N_ACTIVE_ARMS: 2,
     FEEDBACK_POS_DEG: [0.0, 5.3],
     FEEDBACK_BOX_SIZE_DEG: 2.6,
-    FEEDBACK_BOX_COLOR: '#a9a9a9',
     COIN_SIZE_DEG: 2.1,
     MASK_SIZE_DEG: 2.1,
     MESSAGE_COLOR: '#ff0000',
     MESSAGE_HEIGHT_DEG: 0.8,
-    // message between the reward box and the arms (as MESSAGE_POS in config.py)
+    // ARM_COLOR, FEEDBACK_BOX_COLOR, CIRCLE_INACTIVE_COLOR, COIN_NO_REWARD_IMAGE: from STIMULUS_VERSION (below)
 
     // ─── Stimulus files ───────────────────────────────────────────────────────
     COIN_REWARD_IMAGE: 'stimuli/coin_reward.png',
-    COIN_NO_REWARD_IMAGE: 'stimuli/coin_no_reward.png',
     MASK_IMAGES: ['stimuli/mask.png'],
 
     // ─── Bandit trial timing (ms) ─────────────────────────────────────────────
@@ -138,7 +148,7 @@ const CONFIG = {
     WALK_STEP_SD: 0.05,
     WALK_MIN_PROB: 0.0,
     WALK_MAX_PROB: 1.0,
-    // ONLINE: money bonus. Gold coin +BONUS_WIN, black coin -BONUS_LOSS, never below 0 (practice not counted).
+    // ONLINE: money bonus. Gold coin +BONUS_WIN, silver coin -BONUS_LOSS, never below 0 (practice not counted).
     // The bonus is NOT shown during the game; it is shown at the end of each day's game (SHOW_TOTAL_DAY)
     // and saved as bandit_bonus (pay it on Prolific).
     BONUS_WIN: 0.05,
@@ -184,8 +194,11 @@ const CONFIG = {
     BOT_WM_ACCURACY: 0.85,
 };
 
-// ─── degrees -> CSS pixels (the code uses only the px values below) ──────────
+// ─── stimulus version + degrees -> CSS pixels (the code uses only the values set below) ──
 (function (C) {
+    const v = C.STIMULUS_VERSIONS[C.STIMULUS_VERSION];
+    Object.assign(C, { COIN_NO_REWARD_IMAGE: v.no_reward_coin, ARM_COLOR: v.arm_color,
+                       FEEDBACK_BOX_COLOR: v.box_color, CIRCLE_INACTIVE_COLOR: v.circle_inactive_color });
     const cmPerDegSize = C.VIEWING_DISTANCE_CM * Math.PI / 180;
     const size = deg => deg * cmPerDegSize * C.CSS_PX_PER_CM;
     const pos = deg => C.VIEWING_DISTANCE_CM * Math.tan(deg * Math.PI / 180) * C.CSS_PX_PER_CM;
@@ -196,6 +209,6 @@ const CONFIG = {
         MESSAGE_FONT_PX: size(C.MESSAGE_HEIGHT_DEG),
         CHOICE_COIN_X: pos(C.CHOICE_COIN_X_DEG), CHOICE_COIN_SIZE: size(C.CHOICE_COIN_SIZE_DEG),
     });
-    // message between the reward box and the arms (as MESSAGE_POS in config.py)
+    // ARM_COLOR, FEEDBACK_BOX_COLOR, CIRCLE_INACTIVE_COLOR, COIN_NO_REWARD_IMAGE: from STIMULUS_VERSION (below)
     C.MESSAGE_POS = [0, ((C.FEEDBACK_POS[1] - C.FEEDBACK_BOX_SIZE / 2) + (C.ARM_Y + C.ARM_SIZE / 2)) / 2];
 })(CONFIG);

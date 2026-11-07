@@ -9,7 +9,7 @@
 //                       -> valid: empty arms (WAIT_POST_CHOICE) -> fwd mask -> coin -> bwd mask -> empty arms
 // mode 'feedback_only': empty arms (WAIT_POST_CHOICE) -> fwd mask -> coin -> bwd mask -> empty arms
 //                       (calibration trial: no arm choice)
-// probe = true:         after the feedback, PAS (keys 0-3) and the gold/black coin choice (arrows)
+// probe = true:         after the feedback, PAS (keys 0-3) and the gold/silver coin choice (arrows)
 //
 // All t_* data are requestAnimationFrame timestamps (ms since page load) of the first frame
 // after each screen was drawn; *_measured are differences between them.

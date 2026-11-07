@@ -107,7 +107,7 @@ run_day_1.py, run_day_2.py
 common/                shared building blocks
   display.py           window, monitor profile, flip timestamps
   scene.py             THE casino screen and the mask–coin–mask sequence (used by bandit and calibration)
-  awareness.py         PAS and gold/black choice screens
+  awareness.py         PAS and gold/silver choice screens
   ui.py                Hebrew text pages, instructions, quiz, Likert, typed answers
   keyboard.py, io.py   keys / abort, participant dialog and PsychoPy data saving
   day.py, bot.py       day runner, bot mode

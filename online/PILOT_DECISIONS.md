@@ -19,7 +19,7 @@ end (7); sizes in degrees at an assumed 60 cm (15). Still open: one vs two Pavlo
 | 4 | **Same scaffolding as ioc-wm:** desktop-only gate, preload, reCAPTCHA (lab key, only on pavlovia.org), fullscreen, pause + alert on blur, `blur_count` / `fullscreen_exit_count` on every row, Pavlovia finish, then Prolific redirect. | Drop CAPTCHA / blur pause for the pilot. | `config.js` (`ENABLE_CAPTCHA`, `PAUSE_ON_BLUR`, `BLOCK_MOBILE`) |
 | 5 | **Prolific completion codes are placeholders** (`XXXX_...`). While they start with XXXX, there is no redirect. | | `config.js` `COMPLETION_CODE` |
 | 6 | **No consent screen.** ioc-wm also has none (Prolific handles consent). | Add ioc-all's `consent.js` with the IRB text. | |
-| 7 | **DONE - money bonus:** gold coin +£0.05, black coin −£0.05, never below £0; practice not counted. Not shown during the game; shown on the end screen of each day's game. Saved as `bonus_change` / `bonus_total` (per trial) and `bandit_bonus` (every row). Mentioned in the instructions, plus a new quiz question about the black coin. *Choice made:* "presented at the end" = the end of each day's game, because each day is a separate Prolific study and paid separately. | Show only once, at the end of Day 2: the two sessions do not share data, so Day 2 would have to look up Day 1's bonus. | `config.js` `BONUS_*`, `SHOW_TOTAL_DAY` |
+| 7 | **DONE - money bonus:** gold coin +£0.05, silver coin −£0.05, never below £0; practice not counted. Not shown during the game; shown on the end screen of each day's game. Saved as `bonus_change` / `bonus_total` (per trial) and `bandit_bonus` (every row). Mentioned in the instructions, plus a new quiz question about the black coin. *Choice made:* "presented at the end" = the end of each day's game, because each day is a separate Prolific study and paid separately. | Show only once, at the end of Day 2: the two sessions do not share data, so Day 2 would have to look up Day 1's bonus. | `config.js` `BONUS_*`, `SHOW_TOTAL_DAY` |
 
 ## Language and texts
 
@@ -54,6 +54,12 @@ end (7); sizes in degrees at an assumed 60 cm (15). Still open: one vs two Pavlo
 | 23 | **In-task awareness probe off** (`AWARENESS_PROBE_RATE` 0), as in the lab config. When it is on, the PAS and coin-choice questions are already implemented inside the trial. | Turn it on for Day 2, e.g. 0.1. | `config.js` |
 | 24 | **No end-of-day awareness questions** beyond the two open questions: still an open item in the lab version. ioc-all has a "felt win rates" slider survey that could be adapted. | | |
 | 25 | **Missing values are written as `null`** in the CSV (jsPsych default); the lab writes empty cells. | Post-process, or add a data filter before upload. | |
+
+## Coin pair (decided 7 Nov 2026, lab and online)
+
+| # | Decision | Other options | Where |
+|---|---|---|---|
+| 26 | **Silver no-reward coin, luminance-matched to gold** (same mean and SD of luminance), **reward box and arm boxes medium grey #7c7c7c**, unavailable circles #a9a9a9. On the old box the black coin was ~20× more contrasting than gold. Full rationale, measurements and old versions: `../stimuli/COIN_PAIR.md`. | Box 169 (Day-1 coin too faint) or 64 (STEP floor too visible); blue coin; keep black. | `config.js` `STIMULUS_VERSION` (old: `v1_gold_black`) |
 
 ## What was tested (in this session)
 

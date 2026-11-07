@@ -116,12 +116,12 @@ for section, values in ONLINE_ONLY.items():
 # ONLINE: money bonus (the lab version has no money) - Hebrew by Claude, to be reviewed
 he['bandit']['PAGES_RULES'][0]['text'] = ('במהלך המשחק יש לבצע בחירות כדי לנסות ולזכות במטבעות זהב.\n'
                                           'כל מטבע זהב מוסיף {win} לבונוס כספי אמיתי. מטבע זהב נראה כך:')
-he['bandit']['PAGES_RULES'][1]['text'] = 'אם לא זכיתם, יוצג המטבע השחור הבא, ו-{loss} יורדים מהבונוס שלכם (הבונוס לעולם לא יורד מתחת ל-{zero}):'
+he['bandit']['PAGES_RULES'][1]['text'] = 'אם לא זכיתם, יוצג המטבע הכסוף הבא, ו-{loss} יורדים מהבונוס שלכם (הבונוס לעולם לא יורד מתחת ל-{zero}):'
 he['bandit']['PAGES_TIPS'][2]['text'] = ('הבונוס שלכם לא מוצג במהלך המשחק. הוא נספר, מוצג בסוף המשחק ומשולם לכם בנוסף לתשלום הבסיסי. '
                                          'מטרתכם היא לבחור במיקומים הנכונים על מנת לצבור כמה שיותר מטבעות זהב!\n\n'
                                          'במשחק {n_trials} צעדי בחירה, עם {n_breaks} הפסקות. זכרו: המטרה היא לזכות בכמה שיותר מטבעות.')
 quiz = he['bandit']['QUIZ']
-quiz.insert(len(quiz) - 1, {'name': 'bonus', 'prompt': 'מה קורה כשמוצג המטבע השחור?',
+quiz.insert(len(quiz) - 1, {'name': 'bonus', 'prompt': 'מה קורה כשמוצג המטבע הכסוף?',
                             'options': ['שום דבר', '{loss} יורדים מהבונוס שלי (הוא לא יורד מתחת ל-{zero})', 'אני מאבד/ת את כל הבונוס'],
                             'correct': 1})
 he['bandit']['END_WITH_TOTAL'] = 'המשחק הסתיים!\n\nהבונוס שלכם מהמשחק: {bonus}.' + SPACE

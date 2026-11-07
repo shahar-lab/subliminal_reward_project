@@ -65,6 +65,23 @@ TEXT_ENTRY_Y = -3.0              # deg - centre of the typed-answer box
 TEXT_ENTRY_HEIGHT = 6.0          # deg
 LIKERT_LOW_ON_RIGHT = False      # False: 1 on the left ... 7 on the right, as on the keyboard
 
+# ─── Coin pair and scene greys: STIMULUS VERSION ───────────────────────────────
+# Decided by Alon on 7 Nov 2026 - rationale, measurements and how to go back: stimuli/COIN_PAIR.md.
+#   'v2_gold_silver_matched' (current): silver no-reward coin with the SAME mean and SD of luminance as the
+#        gold coin (made by stimuli/make_silver_coin.py); reward box and arms medium grey #7c7c7c (124);
+#        unavailable-arm circles lighter grey ('darkgray', 169) so they stay visible on the darker arms.
+#   'v1_gold_black' (until 7 Nov 2026): black no-reward coin, box and arms 'darkgray' (169), circles 'gray' (128).
+#        Note: the participant texts call the coin "silver" since v2; switching back also needs the v1 texts
+#        (git history, see COIN_PAIR.md).
+STIMULUS_VERSION = 'v2_gold_silver_matched'
+STIMULUS_VERSIONS = {
+    'v1_gold_black': {'no_reward_coin': os.path.join('rewards', 'coin_no_reward.png'),
+                      'arm_color': 'darkgray', 'box_color': 'darkgray', 'circle_inactive_color': 'gray'},
+    'v2_gold_silver_matched': {'no_reward_coin': os.path.join('rewards', 'coin_no_reward_silver.png'),
+                               'arm_color': '#7c7c7c', 'box_color': '#7c7c7c', 'circle_inactive_color': 'darkgray'},
+}
+_STIM = STIMULUS_VERSIONS[STIMULUS_VERSION]
+
 # ─── Casino scene layout (deg) ─────────────────────────────────────────────────
 # Initial values = the original pixel layout (arms 100 px, circles r=30 px,
 # coin 80 px, x = +-100/+-300 px, feedback y = 200 px) converted with the
@@ -72,24 +89,24 @@ LIKERT_LOW_ON_RIGHT = False      # False: 1 on the left ... 7 on the right, as o
 ARM_X_POSITIONS = [-7.9, -2.6, 2.6, 7.9]   # left -> right
 ARM_Y = 0.0
 ARM_SIZE = (2.6, 2.6)
-ARM_COLOR = 'darkgray'
+ARM_COLOR = _STIM['arm_color']                 # see STIMULUS_VERSION
 CIRCLE_RADIUS = 0.8
-CIRCLE_INACTIVE_COLOR = 'gray'
+CIRCLE_INACTIVE_COLOR = _STIM['circle_inactive_color']
 CIRCLE_ACTIVE_COLORS = ['red', 'blue', 'green', 'yellow']
 N_ACTIVE_ARMS = 2
 
 FEEDBACK_POS = (0.0, 5.3)          # the box the coin / masks appear in
 FEEDBACK_BOX_SIZE = (2.6, 2.6)
-FEEDBACK_BOX_COLOR = 'darkgray'
+FEEDBACK_BOX_COLOR = _STIM['box_color']
 # 'בחירה לא זמינה!' / 'too late' messages: centred between the reward box and the arms
 MESSAGE_POS = (0.0, ((FEEDBACK_POS[1] - FEEDBACK_BOX_SIZE[1] / 2) + (ARM_Y + ARM_SIZE[1] / 2)) / 2)
 COIN_SIZE = (2.1, 2.1)
 MASK_SIZE = (2.1, 2.1)
 
 # ─── Stimulus files (relative to STIMULI_DIR) ──────────────────────────────────
-# Which coin pair to use is an open decision (status report) - switch here.
+# The coin pair is chosen by STIMULUS_VERSION above (old files are kept in stimuli/rewards/).
 COIN_REWARD_IMAGE = os.path.join('rewards', 'coin_reward.png')
-COIN_NO_REWARD_IMAGE = os.path.join('rewards', 'coin_no_reward.png')
+COIN_NO_REWARD_IMAGE = _STIM['no_reward_coin']
 MASK_IMAGES = [os.path.join('masks', 'mask.png')]   # one or more; one is drawn per mask screen
 
 # ─── Bandit trial timing (seconds) ─────────────────────────────────────────────

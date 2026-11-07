@@ -2,7 +2,7 @@
 // Four-armed bandit ("casino game") - Day 1 (conscious coin) and Day 2 (subliminal coin).
 // Port of ../tasks/bandit/run.py.
 // Flow: instructions -> quiz (repeat until all correct) -> practice -> blocks with breaks -> bonus earned.
-// ONLINE: money bonus (main trials only): gold coin +BONUS_WIN, black coin -BONUS_LOSS, never below 0.
+// ONLINE: money bonus (main trials only): gold coin +BONUS_WIN, silver coin -BONUS_LOSS, never below 0.
 // Not shown during the game; shown at the end and saved (bonus_total per trial, bandit_bonus on every row).
 // One casino-trial row per trial (phase practice/main). A miss or a grey-arm choice counts as a trial.
 // Coin opacity: Day 1 = DAY1_COIN_OPACITY; Day 2 = this session's calibrated threshold (SESSION.calibration).

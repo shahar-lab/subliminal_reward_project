@@ -45,7 +45,7 @@ User-facing instructions (setup, running a session, data files) are in `README.m
 | change instruction pages | `PAGES` in `texts/<task>.py`; picture keys (`offer`, `coins`, `mask`, …) are drawn by `build_pages()` in the task |
 | change task order or add a task | the `TASKS` list in `run_day_1.py` / `run_day_2.py` |
 | add a data column | add it to the row dict in the task's `run_trial()`; keep the key present (value None) on trials where it doesn't apply |
-| change the coin pair | `COIN_REWARD_IMAGE`, `COIN_NO_REWARD_IMAGE` in `config.py` (open decision: luminance-matched pair) |
+| change the coin pair / scene greys | `STIMULUS_VERSION` in `config.py` (and in `online/js/config.js`); rationale and how to make a matched coin: `stimuli/COIN_PAIR.md`, `stimuli/make_silver_coin.py` |
 | turn on the in-task awareness probe | `AWARENESS_PROBE_RATE` in `config.py` (adds a sentence to the Day-2 instructions automatically) |
 
 After any change: `python -m pytest tests` and `python run_day_1.py --bot` / `run_day_2.py --bot`.
@@ -96,7 +96,7 @@ Decided by Alon during code finalization, 22–23 Oct 2026:
   paper ("in each trial") and was simply not ported.
 - Stop: CWIR ≥ 50 AND ≥ 50 trials (from her code; not stated in the paper). Cap 300 trials → the day stops,
   the casino game does not run.
-- Trial = "feedback only": empty arms → the bandit's own mask–coin–mask sequence → PAS (0–3) → gold/black
+- Trial = "feedback only": empty arms → the bandit's own mask–coin–mask sequence → PAS (0–3) → gold/silver
   2AFC (arrows; gold side by subject-ID parity). No arm choice in calibration. No UI taken from Eden's code.
 - No practice trials (removed 24 Oct 2026: the quiz is enough); 6-question quiz (wording still to be
   reviewed), break between the 2 blocks.
@@ -119,6 +119,15 @@ Decided by Alon during code finalization, 22–23 Oct 2026:
   the lab's 369-participant data). Background #f0f0f0 as in ioc-wm. s/k mapping by ID // 2 (independent of
   the gold side). Live-drawn instruction examples. First task of Day 1.
 
+**Coin pair and scene greys** (decided 7 Nov 2026, full rationale in `stimuli/COIN_PAIR.md`)
+- Problem: on the grey reward box ('darkgray', 169) the gold coin had ~4% contrast and the black coin ~86%, so the
+  no-reward coin was far more noticeable (a conscious "dark flicker = loss" route; threshold driven by the black coin).
+- Stimulus version v2: silver no-reward coin with the same mean and SD of luminance as gold
+  (`stimuli/make_silver_coin.py`); reward box AND arm boxes medium grey #7c7c7c (124: Day-1 coin clearly visible,
+  ~7% contrast at the STEP floor of opacity 0.1); unavailable circles 'darkgray' (169) so they stay visible on the
+  arms. Colour difference gold/silver is intended (the signal). Texts: black → silver / שחור → כסוף.
+- Old version kept: `STIMULUS_VERSION = 'v1_gold_black'`; old coin files untouched.
+
 **Questionnaires** (`tasks/questionnaires/`)
 - End of each day, about the casino game: ioc-wm's 2 open questions (typed) then the 36-item IMI with 6
   attention checks. Hebrew translation by Claude, corrected by Alon (items 28, open question 2).
@@ -127,7 +136,7 @@ Decided by Alon during code finalization, 22–23 Oct 2026:
 
 See the status report ("Points to address and open decisions" and the to-do list) for the full list.
 In short: restore the 3 s debug coin; lab-PC monitor values; timing method; awareness probe; reward walk
-source; coin pair luminance; Day-2 total display; end-of-day strategy/awareness questions; review of the
+source; Day-2 total display; end-of-day strategy/awareness questions; review of the
 calibration quiz wording; move `rl_task/`, `step_calibration/`, `config.json` to `legacy/`.
 
 ## 6. Changelog
@@ -146,3 +155,6 @@ Add a line for every behaviour change (date – what – why).
   `online/README.md` and `online/PILOT_DECISIONS.md`. The lab code is unchanged. If you change `texts/`, run
   `python online/tools/export_hebrew_texts.py`; if you change `tasks/calibration/step.py`, regenerate
   `online/tests/step_reference.json` and run `node online/tests/test_step.js`.
+- 2026-11-07 – Coin pair v2 (lab and online): silver no-reward coin luminance-matched to gold, reward box and arm
+  boxes #7c7c7c, unavailable circles 'darkgray', texts black → silver. Switch: `STIMULUS_VERSION`; rationale and
+  measurements: `stimuli/COIN_PAIR.md`. Why: the black coin was much more noticeable than gold on the old box.
