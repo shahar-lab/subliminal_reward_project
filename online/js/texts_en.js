@@ -39,11 +39,13 @@ var TEXTS_EN = {
                     + 'This study has two parts, on two separate days: today and tomorrow. '
                     + 'You will receive an invitation to the second part after completing today\'s part. '
                     + 'Please take part only if you can complete both parts.\n\n'
-                    + 'Today you will play two games: a "squares game" and a "casino game", and then answer a few questions.\n'
-                    + 'Please stay attentive and in fullscreen mode throughout.',
+                    + 'Today you will play two games: a "squares game" and a "casino game", and then answer a few questions.\n\n'
+                    + 'Please note: if you do not complete both parts, or if you leave fullscreen mode or switch to other windows '
+                    + 'or tabs during the study, your participation will not be approved.',
         WELCOME_DAY2: 'Welcome back, and thank you for taking part in the second part of the study!\n\n'
-                    + 'Today there is a short coin task, then the casino game you played yesterday, and then a few questions.\n'
-                    + 'Please stay attentive and in fullscreen mode throughout.',
+                    + 'Today there is a short coin task, then the casino game you played yesterday, and then a few questions.\n\n'
+                    + 'Please note: if you leave fullscreen mode or switch to other windows or tabs during the study, '
+                    + 'your participation will not be approved.',
         WELCOME_CONTINUE: 'Press the space bar to continue.',
         DAY_END: 'You have finished today\'s part.\nThank you very much!',
         UPLOADING: 'Please wait a moment while your data are being saved...',
@@ -95,9 +97,16 @@ var TEXTS_EN = {
                   + 'Choose one of the offered locations by pressing its key. Right after your choice you will see whether you won a coin.',
               offer: [2, 3] },
         ],
+        // Day 1: the coin is shown briefly between two masks ("screen" pictures) - explained with the mask picture
+        PAGE_MASK_DAY1: { text: 'After each choice, the result appears in the upper square for only a very brief moment, '
+                              + 'between two "screen" pictures like the one below: one right before the coin and one right after it.\n\n'
+                              + 'So it is very important to stay focused and to look at the upper square after every choice, '
+                              + 'so that you do not miss the coin.',
+                          mask: true },
         PAGE_MASK_DAY2: { text: 'This time, right before and right after the coin, the following picture will appear - '
                               + 'which will make it hard for you to see the coin.\n'
-                              + 'Most likely you will not see the coin, but try to learn as best you can and collect as many gold coins as possible!',
+                              + 'Most likely you will not see the coin, but try to learn as best you can and collect as many gold coins as possible!\n\n'
+                              + 'Keep your eyes on the upper square after every choice.',
                           mask: true },
         PAGES_TIPS: [
             { text: 'Note!\n\n'

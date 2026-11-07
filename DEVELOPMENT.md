@@ -160,3 +160,5 @@ Add a line for every behaviour change (date – what – why).
   measurements: `stimuli/COIN_PAIR.md`. Why: the black coin was much more noticeable than gold on the old box.
 - 2026-11-07 – Online pilot: two Pavlovia projects (day1 / day2) generated from `online/` by
   `online/tools/build_pavlovia.py` (day fixed in `js/day.js`; `?day=` ignored there). Edit only `online/`, then rebuild.
+- 2026-11-07 – Online pilot only: welcome-screen approval warning; WM practice with 4 single-square trials (8 in total);
+  Day-1 casino instruction page about the brief coin between the masks (`online/PILOT_DECISIONS.md` 27–29).

@@ -3,7 +3,7 @@
 // js/working_memory.js (same geometry, images, timings) with the structure of the lab port
 // ../tasks/wm/run.py:
 //   instructions -> quiz (any mistake -> back to instructions)
-//   -> practice (WM_N_PRACTICE trials, the first has set size 1; repeated until every
+//   -> practice (WM_N_PRACTICE trials, WM_PRACTICE_N_SET1 of them set size 1 incl. the first; repeated until every
 //      set-size-1 trial is correct) -> WM_N_TRIALS test trials -> K per set size (summary row).
 //   Trial: fixation 1000 -> memory array 200 -> fixation 900 -> test square (s/k, max 6000) -> feedback 500.
 // Same/different keys: from the first character of the participant ID (code // 2, as the lab's ID // 2).
@@ -54,10 +54,13 @@ function wmTimeline() {
         seq = seq.concat(rng.sample(conds, n - seq.length));
         return rng.shuffle(seq);
     }
-    function practiceSequence(n) {
-        const all = [];
-        [1, 4, 8].forEach(s => ['same', 'diff'].forEach(c => all.push([s, c])));
-        return [rng.choice([[1, 'same'], [1, 'diff']])].concat(Array.from({ length: n - 1 }, () => rng.choice(all)));
+    // first trial set size 1; nSet1 set-size-1 trials in total (the others at random positions); the rest 4 or 8
+    function practiceSequence(n, nSet1) {
+        const set1 = () => [1, rng.choice(['same', 'diff'])];
+        const big = () => [rng.choice([4, 8]), rng.choice(['same', 'diff'])];
+        const k = Math.max(1, Math.min(nSet1, n));
+        const rest = rng.shuffle(Array.from({ length: n - 1 }, (_, i) => (i < k - 1 ? set1() : big())));
+        return [set1()].concat(rest);
     }
 
     const fixation = '<div class="wm-fixation">+</div>';
@@ -150,7 +153,7 @@ function wmTimeline() {
     };
     // the practice trial list is drawn anew on every attempt
     let practiceList = [], practiceIdx = 0;
-    practiceBlock.timeline.push(callFunction(() => { practiceList = practiceSequence(C.WM_N_PRACTICE); practiceIdx = 0; }));
+    practiceBlock.timeline.push(callFunction(() => { practiceList = practiceSequence(C.WM_N_PRACTICE, C.WM_PRACTICE_N_SET1); practiceIdx = 0; }));
     for (let i = 0; i < C.WM_N_PRACTICE; i++) {
         trialNodes(() => { const [s, c] = practiceList[practiceIdx++]; return makeTrial(s, c); }, 'practice', { trial: i + 1 })
             .forEach(n => practiceBlock.timeline.push(n));

@@ -100,6 +100,13 @@ async function runDay(browser, base, day, lang) {
     if (day === 1) {
         const wm = rows.filter(r => r.screen === 'wm_test' && r.phase === 'exp');
         check(wm.length === C.WM_N_TRIALS, 'WM trial count');
+        const prac = rows.filter(r => r.screen === 'wm_test' && r.phase === 'practice');
+        const attempts = [...new Set(prac.map(r => r.practice_attempt))];
+        attempts.forEach(a => {
+            const p = prac.filter(r => r.practice_attempt === a);
+            check(p[0].set_size === '1', 'WM practice starts with set size 1');
+            check(p.filter(r => r.set_size === '1').length >= 4, `WM practice attempt ${a}: >= 4 single-square trials`);
+        });
         check(rows.some(r => r.event === 'wm_capacity' && r.K_mean !== ''), 'WM capacity row');
         check(bandit.every(r => +r.coin_opacity === 1), 'day 1 opacity = 1');
     } else {

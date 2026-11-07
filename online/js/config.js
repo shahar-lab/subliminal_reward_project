@@ -166,7 +166,12 @@ const CONFIG = {
     WM_COLORS: ['black', 'blue', 'brown', 'cyan', 'green', 'magenta', 'orange', 'red', 'yellow'],
     WM_SET_SIZES: [4, 8],
     WM_N_TRIALS: 120,
-    WM_N_PRACTICE: 5,                     // first practice trial is set size 1; repeated until all set-size-1 correct
+    // Practice: WM_N_PRACTICE trials, of which exactly WM_PRACTICE_N_SET1 have set size 1 (the first trial is always
+    // set size 1, the others are placed at random); the rest are set size 4 or 8. Repeated until all set-size-1
+    // trials are correct. (Alon, 7 Nov 2026: at least 4 single-square trials. Lab: 5 practice trials, only the
+    // first one surely set size 1.)
+    WM_N_PRACTICE: 8,
+    WM_PRACTICE_N_SET1: 4,
     WM_BALANCED_CONDITIONS: false,
     WM_FIXATION_DURATION: 1000,
     WM_MEMORY_DURATION: 200,
@@ -188,10 +193,10 @@ const CONFIG = {
     // &short=1 (or &bot=1): short session for sanity checks (Alon, 7 Nov 2026).
     // WM 5 test trials; casino game 2 blocks x 5 trials (so the break screen shows) on Day 1 and Day 2;
     // calibration 2 blocks, each stopping after exactly 5 trials (CWIR stop 0, min 5 trials), with the break between.
-    // Practice stays short (WM 3, casino 2). The real values above are not changed.
+    // Practice stays short (WM 5 incl. the 4 single-square trials, casino 2). The real values above are not changed.
     SHORT: {
         BANDIT_N_BLOCKS: 2, BANDIT_TRIALS_PER_BLOCK: 5, BANDIT_N_PRACTICE: 2,
-        WM_N_TRIALS: 5, WM_N_PRACTICE: 3,
+        WM_N_TRIALS: 5, WM_N_PRACTICE: 5,
         CALIB_N_BLOCKS: 2, CALIB_MIN_TRIALS: 5, CALIB_CWIR_STOP: 0, CALIB_MAX_TRIALS: 100,
     },
     BOT_RESPONSE_DELAY: 150,              // ms the bot waits before answering

@@ -61,6 +61,14 @@ end (7); sizes in degrees at an assumed 60 cm (15). 2026-11-03: last ID characte
 |---|---|---|---|
 | 26 | **Silver no-reward coin, luminance-matched to gold** (same mean and SD of luminance), **reward box and arm boxes medium grey #7c7c7c**, unavailable circles #a9a9a9. On the old box the black coin was ~20× more contrasting than gold. Full rationale, measurements and old versions: `../stimuli/COIN_PAIR.md`. | Box 169 (Day-1 coin too faint) or 64 (STEP floor too visible); blue coin; keep black. | `config.js` `STIMULUS_VERSION` (old: `v1_gold_black`) |
 
+## Changes after Alon's own test run (7 Nov 2026)
+
+| # | Change | Where |
+|---|---|---|
+| 27 | Welcome screens: one sentence warning that not completing both parts (Day 1), or leaving fullscreen / switching to other windows or tabs (both days), means the participation will not be approved. | `texts_en.js`, `tools/export_hebrew_texts.py` (`WELCOME_DAY1/2`) |
+| 28 | WM practice: 8 trials, **4 of them single-square** (the first one always), the rest set size 4 or 8; repeated until all single-square trials are correct. Lab: 5 practice trials, only the first surely single-square. Short session: 5 practice trials (4 single-square). | `config.js` `WM_N_PRACTICE`, `WM_PRACTICE_N_SET1`; `wm.js` |
+| 29 | Casino instructions, Day 1: a new page explaining that the coin appears only very briefly, between two "screen" pictures (masks, picture shown), so participants must stay focused on the upper square. Day 2's mask page ends with the same reminder. Online only (the lab instructions are unchanged). | `texts_en.js` `PAGE_MASK_DAY1/2`, Hebrew in the exporter |
+
 ## What was tested (in this session)
 
 - `node tests/test_step.js`: the JS STEP staircase is identical to `tasks/calibration/step.py`, trial by trial and in the

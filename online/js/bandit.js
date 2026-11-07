@@ -37,7 +37,7 @@ function banditTimeline(day) {
     function pages() {
         const title = day === 1 ? B.TITLE : B.TITLE_DAY2;
         const specs = (day === 1 ? B.PAGES_DAY1_INTRO : B.PAGES_DAY2_INTRO)
-            .concat(B.PAGES_RULES, day === 2 ? [B.PAGE_MASK_DAY2] : [], B.PAGES_TIPS);
+            .concat(B.PAGES_RULES, [day === 2 ? B.PAGE_MASK_DAY2 : B.PAGE_MASK_DAY1], B.PAGES_TIPS);
         return specs.map(spec => {
             let text = fmt(spec.text, values);
             if (spec.mask && probeRate > 0) text += B.PROBE_SENTENCE;
