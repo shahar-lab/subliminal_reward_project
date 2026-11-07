@@ -12,6 +12,8 @@ Timing in a browser is less reliable than in the lab; the pilot only checks for 
 Locally, choose the day with `?day=`. On Pavlovia each day is its own project, built from this folder with the
 day fixed (see "Put it on Pavlovia"). The two sessions are linked by `PROLIFIC_PID`.
 
+**How it differs from the lab version:** `ONLINE_VS_LAB.md`.
+
 ## Run it locally (no Pavlovia needed)
 
 ```

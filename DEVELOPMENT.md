@@ -186,3 +186,4 @@ Add a line for every behaviour change (date – what – why).
   `online/tools/build_pavlovia.py` (day fixed in `js/day.js`; `?day=` ignored there). Edit only `online/`, then rebuild.
 - 2026-11-07 – Online pilot only: welcome-screen approval warning; WM practice with 4 single-square trials (8 in total);
   Day-1 casino instruction page about the brief coin between the masks (`online/PILOT_DECISIONS.md` 27–29).
+- 2026-11-07 – Merged `main` (frame-counted timing, 33 ms coin, calibration-check pilot) into the online branch; `online/ONLINE_VS_LAB.md` lists every difference between the lab and online versions.

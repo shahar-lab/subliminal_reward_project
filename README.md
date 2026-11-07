@@ -10,7 +10,8 @@ presented below awareness?
 
 Each script opens a dialog (subject ID, experimenter; on Day 1 also age, gender, hand) and runs all tasks.
 
-**Online pilot (jsPsych / Pavlovia):** see `online/README.md` - a browser port of both days for Prolific.
+**Online pilot (jsPsych / Pavlovia):** see `online/README.md` - a browser port of both days for Prolific;
+what differs from this lab version: `online/ONLINE_VS_LAB.md`.
 
 **Changing the code?** Read `DEVELOPMENT.md` first: design principles, where to change what, known gotchas,
 the decision log, and a changelog to update.
