@@ -74,7 +74,7 @@ async function runDay(browser, base, day, lang) {
                       coin_ms: coin.length ? `${Math.min(...coin).toFixed(1)}-${Math.max(...coin).toFixed(1)}` : '-',
                       refresh_hz: rows[0] && (+rows[0].refresh_hz).toFixed(1), file: path.relative(ROOT, file) };
 
-    const C = { BANDIT_N_BLOCKS: 2, BANDIT_TRIALS_PER_BLOCK: 3, BANDIT_N_PRACTICE: 2, WM_N_TRIALS: 6 };
+    const C = { BANDIT_N_BLOCKS: 1, BANDIT_TRIALS_PER_BLOCK: 5, BANDIT_N_PRACTICE: 2, WM_N_TRIALS: 5 };   // = CONFIG.SHORT
     const bandit = casino.filter(r => r.task === 'bandit');
     check(bandit.filter(r => r.phase === 'practice').length === C.BANDIT_N_PRACTICE, 'practice trial count');
     check(bandit.filter(r => r.phase === 'main').length === C.BANDIT_N_BLOCKS * C.BANDIT_TRIALS_PER_BLOCK, 'main trial count');
@@ -103,7 +103,7 @@ async function runDay(browser, base, day, lang) {
         check(bandit.every(r => +r.coin_opacity === 1), 'day 1 opacity = 1');
     } else {
         const cal = casino.filter(r => r.task === 'calibration');
-        check(cal.length >= 2 * 3, 'calibration trials');
+        check(cal.length === 5, `calibration: exactly 5 trials (${cal.length})`);
         check(cal.every(r => r.pas !== '' && r.coin_chosen !== '' && r.step_trial !== ''), 'calibration rows complete');
         const fin = rows.find(r => r.event === 'final_threshold');
         check(fin && fin.final_threshold !== '', 'final threshold');

@@ -23,7 +23,7 @@ Then open in Chrome:
 | URL | What it does |
 |---|---|
 | `http://localhost:8000/index.html?day=1` | the real Day 1 (CSV downloaded at the end) |
-| `...?day=2&short=1` | short session (few trials per task), **you** play (= `--manual-demo`) |
+| `...?day=2&short=1` | short session: 5 trials in each part (WM, casino game, calibration), **you** play (= `--manual-demo`) |
 | `...?day=2&bot=1` | short session, answered automatically (= `--bot`) |
 | `...?day=1&bot=full` | full session, answered automatically (= `--bot-real`) |
 | add `&lang=he` | Hebrew instead of English |
