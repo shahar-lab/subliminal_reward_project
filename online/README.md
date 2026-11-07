@@ -9,8 +9,8 @@ Timing in a browser is less reliable than in the lab; the pilot only checks for 
 | 1 | `index.html?day=1` | Working memory (change detection), then the casino game with a fully visible coin, then questionnaires |
 | 2 | `index.html?day=2` | STEP calibration of the coin opacity, then the casino game at the calibrated opacity, then questionnaires |
 
-Both days are the same Pavlovia project. Make two Prolific studies (Day 1 and Day 2), each with its own
-`day=` in the URL. The two sessions are linked by `PROLIFIC_PID`.
+Locally, choose the day with `?day=`. On Pavlovia each day is its own project, built from this folder with the
+day fixed (see "Put it on Pavlovia"). The two sessions are linked by `PROLIFIC_PID`.
 
 ## Run it locally (no Pavlovia needed)
 
@@ -30,36 +30,46 @@ Then open in Chrome:
 
 Checks: `node tests/test_step.js` checks that the STEP staircase gives the same result as the Python version, trial by trial.
 `node tests/e2e_bot.js` runs both days, in English and Hebrew, with the bot in headless Chromium and checks the data
-(needs Playwright).
+(needs Playwright). `node tests/test_build.js` checks the Pavlovia build: the day is fixed, and `.git/` and `data/` are kept.
 
-## Put it on Pavlovia (once)
+## Put it on Pavlovia: two projects, built from this one folder
 
-1. On https://gitlab.pavlovia.org create a new project in the `Shahar_Lab` group, e.g. `subliminal-reward-pilot`.
-2. Push the **contents of this `online/` folder** to it, as the repository root:
+Each day is its own Pavlovia project, so participants cannot switch days by editing the URL:
+`Shahar_Lab/subliminal-reward-pilot-day1` and `Shahar_Lab/subliminal-reward-pilot-day2`.
+Both are **generated** from this folder (the single source). Always edit here, never in the built folders.
+
+1. Build the two projects:
    ```
-   cd online
-   git init -b master
-   git add .
-   git commit -m "Online pilot"
-   git remote add origin https://gitlab.pavlovia.org/Shahar_Lab/subliminal-reward-pilot.git
+   python online/tools/build_pavlovia.py            (from the repository root)
+   ```
+   This writes `online/build/subliminal-reward-pilot-day1` and `-day2` (git-ignored). Each is a complete
+   experiment with the day fixed in `js/day.js`, so `?day=` is ignored there.
+   Use `--out <folder>` to build somewhere else, e.g. next to your Pavlovia clones.
+2. **First time:** on https://gitlab.pavlovia.org create the two projects in the `Shahar_Lab` group (names
+   above). Then push each built folder; the build script prints the exact commands:
+   ```
+   cd online/build/subliminal-reward-pilot-day1
+   git init -b master && git add -A && git commit -m "Online pilot"
+   git remote add origin https://gitlab.pavlovia.org/Shahar_Lab/subliminal-reward-pilot-day1.git
    git push -u origin master
    ```
-   (Later updates: change the files in this GitHub repository, copy `online/` again, then commit and push.
-   Or from the repository root: `git subtree push --prefix online pavlovia master`, after
-   `git remote add pavlovia https://gitlab.pavlovia.org/Shahar_Lab/subliminal-reward-pilot.git`.)
-3. On pavlovia.org open the experiment and set it to **PILOTING**. Pilot runs get a token in the URL.
-   Under Dashboard → Experiments → the experiment → *Saving results*, choose CSV and turn on
-   *save incomplete results* (recommended).
-4. Set it to **RUNNING**. On Prolific the study URL is
-   `https://run.pavlovia.org/Shahar_Lab/subliminal-reward-pilot/?day=1&PROLIFIC_PID={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}`
-   (and `day=2` for the Day-2 study).
-5. Put the Prolific completion codes in `js/config.js`:
+   and the same for `-day2`.
+3. **Later updates:** change the code in `online/`, then run the build again with `--out` pointing at the folder
+   that holds your two clones. A folder that is already a clone is updated in place: everything is replaced
+   except `.git/` and `data/`, so participants' results are never touched. Then `git add -A`, commit and push in each.
+4. On pavlovia.org, for **each** project: set it to **PILOTING** (pilot runs get a token in the URL). Under
+   *Saving results*, choose CSV and turn on *save incomplete results* (recommended).
+5. Set it to **RUNNING**. The Prolific study URLs:
+   - Day 1: `https://run.pavlovia.org/Shahar_Lab/subliminal-reward-pilot-day1/?PROLIFIC_PID={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}`
+   - Day 2: the same with `-day2`. Make the Day-2 Prolific study available only to Day-1 completers
+     (custom allowlist).
+6. Put the Prolific completion codes in `js/config.js` **before building**:
    - `COMPLETION_CODE`, for each day: finished, or calibration error (the participant is paid);
    - `SCREENED_OUT_CODE`: quiz failed 3 times.
    While a code starts with `XXXX`, participants are not redirected.
-6. Pay the bonus: the `bandit_bonus` column (in £) of each session's CSV.
+7. Pay the bonus: the `bandit_bonus` column (in £) of each session's CSV.
 
-Data: one CSV per session in the Pavlovia project's `data/` folder, named
+Data: one CSV per session in each Pavlovia project's `data/` folder, named
 `<experiment>_<PROLIFIC_PID>_day<1|2>_SESSION_<date>.csv`.
 
 ## Code layout
@@ -70,6 +80,7 @@ js/config.js               EVERY tunable value (same names as ../config.py; diff
 js/texts_en.js             all English participant text
 js/texts_he.js             all Hebrew text - GENERATED from ../texts/*.py by tools/export_hebrew_texts.py
 js/main.js                 session setup + the two day timelines (as run_day_1.py / run_day_2.py)
+js/day.js                  FIXED_DAY: null here (day from the URL); 1 or 2 in the built Pavlovia projects
 js/plugin-casino-trial.js  jsPsych plugin: one casino trial (bandit or calibration), canvas, frame-counted
 js/display.js              THE casino scene drawing, refresh-rate measurement, frame sequences
 js/step.js                 STEP staircase (port of ../tasks/calibration/step.py)
@@ -78,7 +89,7 @@ js/wm.js, calibration.js, bandit.js, questionnaires.js   the tasks
 js/common.js               instructions + quiz loop, message screens, bot helpers
 stimuli/                   coins and mask (from ../stimuli), WM squares and examples (from ioc-wm)
 jspsych/jspsych-7-pavlovia-2021.12.js   Pavlovia plugin (from ioc-wm)
-tests/, tools/             checks and the Hebrew text exporter
+tests/, tools/             checks, the Hebrew text exporter, and build_pavlovia.py (makes the two Pavlovia projects)
 ```
 
 ## Timing

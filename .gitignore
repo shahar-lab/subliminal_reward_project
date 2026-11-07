@@ -18,3 +18,4 @@ __pycache__/
 
 # Online pilot: test output
 online/tests/output/
+online/build/

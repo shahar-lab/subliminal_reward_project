@@ -158,3 +158,5 @@ Add a line for every behaviour change (date – what – why).
 - 2026-11-07 – Coin pair v2 (lab and online): silver no-reward coin luminance-matched to gold, reward box and arm
   boxes #7c7c7c, unavailable circles 'darkgray', texts black → silver. Switch: `STIMULUS_VERSION`; rationale and
   measurements: `stimuli/COIN_PAIR.md`. Why: the black coin was much more noticeable than gold on the old box.
+- 2026-11-07 – Online pilot: two Pavlovia projects (day1 / day2) generated from `online/` by
+  `online/tools/build_pavlovia.py` (day fixed in `js/day.js`; `?day=` ignored there). Edit only `online/`, then rebuild.

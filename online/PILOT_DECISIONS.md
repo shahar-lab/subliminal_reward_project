@@ -7,14 +7,14 @@ the other options, and where to change it. Nothing in the lab (PsychoPy) code wa
 **Alon's answers (2026-11-01), now implemented:** English yes (8); coin 33 ms yes (13); calibration cap
 stops the session with an error message and the normal completion code (18); counterbalancing from the first
 character of the ID (19, 20); quizzes 3 attempts then out (17); money bonus ±£0.05, floor 0, shown only at the
-end (7); sizes in degrees at an assumed 60 cm (15). Still open: one vs two Pavlovia projects (2). 2026-11-03: last ID character for counterbalancing (20b).
+end (7); sizes in degrees at an assumed 60 cm (15). 2026-11-03: last ID character for counterbalancing (20b). 2026-11-07: coin pair v2 (26); two Pavlovia projects built from one source (2).
 
 ## Platform and setup
 
 | # | Decision | Other options | Where |
 |---|---|---|---|
 | 1 | **Pavlovia repository not created.** The cloud session that did the port could not reach gitlab.pavlovia.org (blocked by its network policy). The experiment lives in `online/` of the GitHub repo, ready to push. | Create it from a session that can reach Pavlovia; or push it yourself with the commands in README "Put it on Pavlovia". | `online/README.md` |
-| 2 | **One Pavlovia project for both days**, chosen with `?day=1` / `?day=2`; days linked by `PROLIFIC_PID`. | Two separate projects. | `main.js` |
+| 2 | **DONE (Alon, 7 Nov 2026) - two Pavlovia projects** (`subliminal-reward-pilot-day1` / `-day2`), so participants cannot switch days via the URL. Both are generated from the single source `online/` by `tools/build_pavlovia.py`, which fixes the day in `js/day.js` (`?day=` is then ignored), so the two days cannot drift apart. Rebuilding into an existing clone keeps `.git/` and `data/`. | One project with `?day=` (a participant could edit the URL; it would show up as a wrong completion code); one project with the day taken from `STUDY_ID`. | `tools/build_pavlovia.py`, `js/day.js` |
 | 3 | **jsPsych 7.3.1 and jQuery are inside the project** (copied from ioc-wm's `jspsych/dist`). They are not loaded from Pavlovia's `lib/vendors/jspsych-7.1.2` the way ioc-wm/ioc-all do, so local runs and Pavlovia runs use identical code. The Pavlovia plugin is ioc-wm's `jspsych-7-pavlovia-2021.12.js`. | Use `lib/vendors` as in ioc (needs commenting/uncommenting script tags for local runs). | `index.html` |
 | 4 | **Same scaffolding as ioc-wm:** desktop-only gate, preload, reCAPTCHA (lab key, only on pavlovia.org), fullscreen, pause + alert on blur, `blur_count` / `fullscreen_exit_count` on every row, Pavlovia finish, then Prolific redirect. | Drop CAPTCHA / blur pause for the pilot. | `config.js` (`ENABLE_CAPTCHA`, `PAUSE_ON_BLUR`, `BLOCK_MOBILE`) |
 | 5 | **Prolific completion codes are placeholders** (`XXXX_...`). While they start with XXXX, there is no redirect. | | `config.js` `COMPLETION_CODE` |

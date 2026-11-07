@@ -11,7 +11,8 @@
     const url = new URLSearchParams(window.location.search);
 
     // ── session settings ─────────────────────────────────────────────────────
-    const day = url.get('day') === '2' ? 2 : 1;
+    // Day: fixed in each Pavlovia project (js/day.js, written by tools/build_pavlovia.py); else from the URL
+    const day = (typeof FIXED_DAY !== 'undefined' && FIXED_DAY) ? FIXED_DAY : (url.get('day') === '2' ? 2 : 1);
     const lang = (url.get('lang') || C.DEFAULT_LANGUAGE) === 'he' ? 'he' : 'en';
     const botParam = url.get('bot');
     const bot = botParam === '1' || botParam === 'full';
