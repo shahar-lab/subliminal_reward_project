@@ -7,13 +7,15 @@ Each output folder is a complete experiment with the day FIXED (js/day.js: FIXED
 ?day= URL parameter is ignored there. Always edit the code in online/ (the single source) and rebuild; never
 edit the built folders by hand.
 
-If an output folder is already a git clone of the Pavlovia project, it is updated in place: everything is
-replaced EXCEPT .git/ and data/ (the participants' results on Pavlovia are never touched). Then commit and push
-from that folder (commands printed at the end).
+If an output folder is already a git clone of the Pavlovia project, it is updated in place, file by file:
+changed files are overwritten and files no longer in the source are removed, EXCEPT inside .git/ and data/
+(the participants' results on Pavlovia are never touched). Folders are never deleted and recreated, so it also
+works inside OneDrive. Then commit and push from that folder (commands printed at the end).
 """
 import argparse
 import os
-import shutil
+import stat
+import time
 
 SRC = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 PROJECT = 'subliminal-reward-pilot'                      # Pavlovia projects: <PROJECT>-day1, <PROJECT>-day2
@@ -39,25 +41,77 @@ https://run.pavlovia.org/{group}/{name}/?PROLIFIC_PID={{{{%PROLIFIC_PID%}}}}&STU
 """
 
 
+def _retry(action, path, tries=5):
+    """Run action(path); on Windows/OneDrive a file can be briefly locked or read-only: make it writable and retry."""
+    for attempt in range(tries):
+        try:
+            return action(path)
+        except PermissionError:
+            if attempt == tries - 1:
+                raise
+            try:
+                os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+            except OSError:
+                pass
+            time.sleep(0.5 * (attempt + 1))
+
+
+def _write_if_changed(path, data):
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            if f.read() == data:
+                return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    def write(p):
+        with open(p, 'wb') as f:
+            f.write(data)
+    _retry(write, path)
+
+
 def build(out_dir, day):
+    """Sync the project folder file by file (no folder is deleted and recreated - that fails on OneDrive).
+    Files that changed are overwritten, files that are no longer in the source are removed; .git/ and data/
+    are never touched."""
     name = f'{PROJECT}-day{day}'
     target = os.path.join(out_dir, name)
     os.makedirs(target, exist_ok=True)
-    for entry in os.listdir(target):                     # clean, but keep .git and data
-        if entry in KEEP:
-            continue
-        path = os.path.join(target, entry)
-        shutil.rmtree(path) if os.path.isdir(path) and not os.path.islink(path) else os.remove(path)
+
+    wanted = {}                                           # relative path -> file content
     for entry in INCLUDE:
         src = os.path.join(SRC, entry)
-        dst = os.path.join(target, entry)
-        shutil.copytree(src, dst) if os.path.isdir(src) else shutil.copy2(src, dst)
-    with open(os.path.join(target, 'js', 'day.js'), 'w', encoding='utf-8') as f:
-        f.write(DAY_JS.format(day=day))
-    with open(os.path.join(target, 'README.md'), 'w', encoding='utf-8') as f:
-        f.write(README.format(name=name, day=day, group=GROUP))
-    with open(os.path.join(target, '.gitignore'), 'w', encoding='utf-8') as f:
-        f.write('.DS_Store\n')
+        if os.path.isdir(src):
+            for root, _, files in os.walk(src):
+                for fn in files:
+                    full = os.path.join(root, fn)
+                    with open(full, 'rb') as f:
+                        wanted[os.path.relpath(full, SRC)] = f.read()
+        else:
+            with open(src, 'rb') as f:
+                wanted[entry] = f.read()
+    wanted[os.path.join('js', 'day.js')] = DAY_JS.format(day=day).encode('utf-8')
+    wanted['README.md'] = README.format(name=name, day=day, group=GROUP).encode('utf-8')
+    wanted['.gitignore'] = b'.DS_Store\n'
+
+    # remove files that are no longer part of the experiment (outside .git/ and data/)
+    for root, dirs, files in os.walk(target, topdown=True):
+        if os.path.abspath(root) == os.path.abspath(target):
+            dirs[:] = [d for d in dirs if d not in KEEP]
+        for fn in files:
+            full = os.path.join(root, fn)
+            if os.path.relpath(full, target) not in wanted:
+                _retry(os.remove, full)
+    for root, dirs, files in os.walk(target, topdown=False):     # empty folders: best effort only
+        if os.path.relpath(root, target).split(os.sep)[0] in KEEP or os.path.abspath(root) == os.path.abspath(target):
+            continue
+        if not os.listdir(root):
+            try:
+                os.rmdir(root)
+            except OSError:
+                pass
+
+    for rel, data in wanted.items():
+        _write_if_changed(os.path.join(target, rel), data)
     return name, target
 
 
