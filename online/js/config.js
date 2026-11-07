@@ -185,14 +185,14 @@ const CONFIG = {
     QUESTIONNAIRE_IMI: true,
 
     // ─── Short / bot sessions (as BOT_SHORT in common/bot.py) ─────────────────
-    // &short=1 (or &bot=1): exactly 5 main trials in each of the 4 parts, for sanity checks (Alon, 7 Nov 2026).
-    // WM 5 test trials; casino game 5 trials (1 block, so no break screen) on Day 1 and Day 2;
-    // calibration 1 block that always stops after exactly 5 trials (CWIR stop 0, min 5 trials).
+    // &short=1 (or &bot=1): short session for sanity checks (Alon, 7 Nov 2026).
+    // WM 5 test trials; casino game 2 blocks x 5 trials (so the break screen shows) on Day 1 and Day 2;
+    // calibration 2 blocks, each stopping after exactly 5 trials (CWIR stop 0, min 5 trials), with the break between.
     // Practice stays short (WM 3, casino 2). The real values above are not changed.
     SHORT: {
-        BANDIT_N_BLOCKS: 1, BANDIT_TRIALS_PER_BLOCK: 5, BANDIT_N_PRACTICE: 2,
+        BANDIT_N_BLOCKS: 2, BANDIT_TRIALS_PER_BLOCK: 5, BANDIT_N_PRACTICE: 2,
         WM_N_TRIALS: 5, WM_N_PRACTICE: 3,
-        CALIB_N_BLOCKS: 1, CALIB_MIN_TRIALS: 5, CALIB_CWIR_STOP: 0, CALIB_MAX_TRIALS: 100,
+        CALIB_N_BLOCKS: 2, CALIB_MIN_TRIALS: 5, CALIB_CWIR_STOP: 0, CALIB_MAX_TRIALS: 100,
     },
     BOT_RESPONSE_DELAY: 150,              // ms the bot waits before answering
     BOT_WM_ACCURACY: 0.85,
